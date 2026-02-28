@@ -2,11 +2,11 @@
   <div class="app-container">
     <el-card>
       <div class="header-actions" style="margin-bottom: 20px; text-align: right;">
-        <el-button type="primary" @click="handleCreate">📺 发布新课程</el-button>
+        <el-button type="primary" @click="handleCreate">📺 发布新学习任务</el-button>
       </div>
 
       <el-table :data="courseList" v-loading="loading" border stripe>
-        <el-table-column prop="id" label="ID" width="60" />
+        <el-table-column prop="id" label="ID" width="60" align="center" />
         <el-table-column label="封面" width="100" align="center">
           <template #default="{ row }">
             <el-image 
@@ -20,20 +20,26 @@
             <span v-else style="color: #999; font-size: 12px;">无封面</span>
           </template>
         </el-table-column>
-        <el-table-column prop="title" label="课程标题" min-width="200" show-overflow-tooltip />
-        <el-table-column label="课程类型" width="100" align="center">
+        <el-table-column prop="title" label="任务标题" min-width="200" show-overflow-tooltip />
+        <el-table-column label="形式" width="120" align="center">
+          <template #default="{ row }">
+            <el-tag v-if="row.course_type === 2" type="success">📝 练习/图文</el-tag>
+            <el-tag v-else type="primary">🎬 视频课程</el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column label="性质" width="90" align="center">
           <template #default="{ row }">
             <el-tag :type="row.is_required ? 'danger' : 'info'">
-              {{ row.is_required ? '必修课' : '选修课' }}
+              {{ row.is_required ? '必修' : '选修' }}
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="credit" label="奖励学分" width="100" align="center">
+        <el-table-column prop="points_reward" label="奖励学分" width="90" align="center">
           <template #default="{ row }">
-            <span style="color: #E6A23C; font-weight: bold;">+{{ row.credit || row.points || 0 }}</span>
+            <span style="color: #E6A23C; font-weight: bold;">+{{ row.points_reward || 0 }}</span>
           </template>
         </el-table-column>
-        <el-table-column prop="created_at" label="发布时间" width="160">
+        <el-table-column prop="created_at" label="发布时间" width="160" align="center">
           <template #default="{ row }">
             {{ new Date(row.created_at).toLocaleString().slice(0, 10) }}
           </template>
@@ -50,28 +56,44 @@
     <el-dialog 
       v-model="dialogVisible" 
       :title="dialogTitle" 
-      width="650px" 
+      width="700px" 
       destroy-on-close
     >
       <el-form :model="form" label-width="100px">
-        <el-form-item label="课程标题" required>
+        <el-form-item label="任务标题" required>
           <el-input v-model="form.title" placeholder="例如：二十大精神深度解读第一讲" />
         </el-form-item>
         
-        <el-form-item label="课程简介">
-          <el-input v-model="form.description" type="textarea" :rows="3" placeholder="简要描述课程内容..." />
+        <el-form-item label="任务简介">
+          <el-input v-model="form.description" type="textarea" :rows="3" placeholder="简要描述任务内容..." />
         </el-form-item>
 
-        <el-form-item label="视频地址" required>
+        <el-form-item label="任务形式" required>
+          <el-radio-group v-model="form.course_type">
+            <el-radio :value="1">🎬 视频课程</el-radio>
+            <el-radio :value="2">📝 图文 / 练习题</el-radio>
+          </el-radio-group>
+        </el-form-item>
+
+        <el-form-item label="视频地址" required v-if="form.course_type === 1">
           <el-input v-model="form.video_url" placeholder="请输入MP4视频的在线URL链接" />
-          <div style="font-size: 12px; color: #999; margin-top: 5px;">
+          <div style="font-size: 12px; color: #999; margin-top: 5px; line-height: 1.4;">
             提示：为保证播放流畅，建议将视频上传至阿里云/腾讯云对象存储后，将链接粘贴于此。
           </div>
         </el-form-item>
 
+        <el-form-item label="图文内容" required v-if="form.course_type === 2">
+          <el-input 
+            v-model="form.content" 
+            type="textarea" 
+            :rows="8" 
+            placeholder="请输入文章内容、题目，或者粘贴问卷星等外部答题链接..." 
+          />
+        </el-form-item>
+
         <el-row>
           <el-col :span="12">
-            <el-form-item label="课程类型">
+            <el-form-item label="任务性质">
               <el-switch 
                 v-model="form.is_required" 
                 active-text="必修课" 
@@ -81,12 +103,12 @@
           </el-col>
           <el-col :span="12">
             <el-form-item label="奖励学分" required>
-              <el-input-number v-model="form.credit" :min="1" :max="50" />
+              <el-input-number v-model="form.points_reward" :min="1" :max="50" />
             </el-form-item>
           </el-col>
         </el-row>
 
-        <el-form-item label="课程封面">
+        <el-form-item label="任务封面">
           <el-upload
             class="cover-uploader"
             action="#"
@@ -137,14 +159,16 @@ const submitLoading = ref(false)
 const imageUrl = ref('')
 const rawFile = ref<File | null>(null)
 
-// 注意：这里的字段名(credit/points)需与你的 Django 模型保持一致
+// 👇 加入 course_type 和 content
 const form = reactive({
   id: undefined,
   title: '',
   description: '',
+  course_type: 1, // 默认为视频
   video_url: '',
+  content: '',
   is_required: false,
-  credit: 5
+  points_reward: 10
 })
 
 const handleCoverChange = (file: any) => {
@@ -156,39 +180,50 @@ const handleCreate = () => {
   form.id = undefined
   form.title = ''
   form.description = ''
+  form.course_type = 1
   form.video_url = ''
+  form.content = ''
   form.is_required = false
-  form.credit = 5
+  form.points_reward = 10
   imageUrl.value = ''
   rawFile.value = null
   
-  dialogTitle.value = '发布新课程'
+  dialogTitle.value = '发布新学习任务'
   dialogVisible.value = true
 }
 
 const handleEdit = (row: any) => {
   Object.assign(form, row)
-  // 如果后端传过来的是 True/False，前端 el-switch 绑定的是 boolean，这里通常可以直接用
+  // 兼容老数据没有 course_type 的情况
+  if (!form.course_type) form.course_type = 1 
+  
   imageUrl.value = row.cover || ''
   rawFile.value = null
-  dialogTitle.value = '编辑课程'
+  dialogTitle.value = '编辑学习任务'
   dialogVisible.value = true
 }
 
 const handleSubmit = async () => {
-  if (!form.title || !form.video_url) {
-    return ElMessage.warning('课程标题和视频地址为必填项')
+  if (!form.title) {
+    return ElMessage.warning('任务标题为必填项')
+  }
+  if (form.course_type === 1 && !form.video_url) {
+    return ElMessage.warning('视频地址为必填项')
+  }
+  if (form.course_type === 2 && !form.content) {
+    return ElMessage.warning('图文/练习题内容为必填项')
   }
 
   submitLoading.value = true
-  // 使用 FormData 打包数据以支持图片上传
   const formData = new FormData()
   formData.append('title', form.title)
   formData.append('description', form.description)
-  formData.append('video_url', form.video_url)
-  // boolean 值转为字符串传递给 Django
+  formData.append('course_type', form.course_type.toString())
   formData.append('is_required', form.is_required ? 'true' : 'false') 
-  formData.append('credit', form.credit.toString())
+  formData.append('points_reward', form.points_reward.toString()) 
+  
+  if (form.course_type === 1) formData.append('video_url', form.video_url)
+  if (form.course_type === 2) formData.append('content', form.content)
   
   if (rawFile.value) {
     formData.append('cover', rawFile.value)
@@ -212,7 +247,7 @@ const handleSubmit = async () => {
 }
 
 const handleDelete = (row: any) => {
-  ElMessageBox.confirm('确认删除该课程吗？这可能会影响正在学习的党员数据！', '危险操作', { type: 'warning' }).then(async () => {
+  ElMessageBox.confirm('确认删除该任务吗？这可能会影响正在学习的党员数据！', '危险操作', { type: 'warning' }).then(async () => {
     await deleteCourse(row.id)
     ElMessage.success('删除成功')
     fetchCourses()

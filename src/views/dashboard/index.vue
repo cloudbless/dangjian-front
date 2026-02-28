@@ -1,3 +1,4 @@
+import { ref, computed, onMounted, onBeforeUnmount, nextTick } from "vue";
 <template>
   <div class="dashboard-container">
     <el-row :gutter="20">
@@ -53,7 +54,7 @@
       <h3>⚡ 快捷操作</h3>
 
       <el-button
-        v-if="userRole === 'super_admin'"
+        v-if="userRole === 'super_admin' || userRole === 'branch_admin'"
         type="primary"
         plain
         @click="$router.push('/content/news')"
@@ -78,7 +79,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onBeforeUnmount } from "vue";
+import { ref, computed, onMounted, onBeforeUnmount, nextTick } from "vue";
 import * as echarts from "echarts";
 import { ElMessage } from "element-plus";
 import { getDashboardStats } from "../../api/system";
@@ -127,40 +128,6 @@ const initPieChart = (data: any[]) => {
   pieChart.setOption(option);
 };
 
-const initBarChart = (categories: string[], values: number[]) => {
-  if (!barChartRef.value) return;
-  barChart = echarts.init(barChartRef.value);
-
-  const option = {
-    tooltip: { trigger: "axis", axisPointer: { type: "shadow" } },
-    grid: { left: "3%", right: "4%", bottom: "3%", containLabel: true },
-    xAxis: [
-      {
-        type: "category",
-        data: categories,
-        axisTick: { alignWithLabel: true },
-      },
-    ],
-    yAxis: [{ type: "value" }],
-    series: [
-      {
-        name: "总活跃积分",
-        type: "bar",
-        barWidth: "50%",
-        data: values,
-        itemStyle: {
-          color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-            { offset: 0, color: "#ce1126" },
-            { offset: 1, color: "#ff7f7f" },
-          ]),
-          borderRadius: [4, 4, 0, 0],
-        },
-      },
-    ],
-  };
-  barChart.setOption(option);
-};
-
 const fetchDashboardData = async () => {
   try {
     loading.value = true;
@@ -171,21 +138,64 @@ const fetchDashboardData = async () => {
       { title: "党员总数", value: `${res.cards.total_users} 人`, icon: "📚" },
       { title: "累计学习", value: `${res.cards.total_studies} 次`, icon: "🔥" },
       { title: "支部数量", value: `${res.cards.total_orgs} 个`, icon: "🚩" },
-      {
-        title: "全网总积分",
-        value: `${res.cards.total_points} 分`,
-        icon: "⭐",
-      },
+      { title: "全网总积分", value: `${res.cards.total_points} 分`, icon: "⭐" },
     ];
 
+    // 🚩 关键：先关闭 loading，再在 nextTick 中初始化图表
+    loading.value = false; 
+    
+    await nextTick(); // 等待 loading 遮罩彻底消失，DOM 尺寸稳定
+    
     initPieChart(res.pie_data);
     initBarChart(res.bar_data.categories, res.bar_data.values);
   } catch (error) {
     console.error(error);
-    ElMessage.error("获取大屏统计数据失败，请检查网络");
-  } finally {
     loading.value = false;
+    ElMessage.error("获取大屏统计数据失败");
   }
+};
+
+const initBarChart = (categories: string[], values: number[]) => {
+  if (!barChartRef.value) return;
+
+  // 🚩 优化：如果已经存在实例则销毁重建，防止黑屏或残留
+  if (barChart) {
+    barChart.dispose();
+  }
+  barChart = echarts.init(barChartRef.value);
+
+  const option = {
+    backgroundColor: 'transparent', // 显式设为透明，防止背景变黑
+    tooltip: { trigger: "axis", axisPointer: { type: "shadow" } },
+    grid: { left: "3%", right: "4%", bottom: "10%", containLabel: true },
+    xAxis: {
+      type: "category",
+      data: categories,
+      axisTick: { alignWithLabel: true },
+      axisLabel: { color: '#666' } // 显式文字颜色
+    },
+    yAxis: { 
+      type: "value",
+      axisLabel: { color: '#666' }
+    },
+    series: [
+      {
+        name: "总活跃积分",
+        type: "bar",
+        barWidth: "50%",
+        data: values,
+        itemStyle: {
+          // 🚩 检查颜色定义，确保没有拼写错误
+          color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+            { offset: 0, color: "#ce1126" },
+            { offset: 1, color: "#ff7f7f" },
+          ]),
+          borderRadius: [4, 4, 0, 0],
+        },
+      },
+    ],
+  };
+  barChart.setOption(option);
 };
 
 const handleResize = () => {

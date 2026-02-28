@@ -87,3 +87,24 @@ export function getDashboardStats() {
     method: 'get'
   })
 }
+
+// src/api/system.ts
+
+// 10. 获取我的支部概况信息
+export function getMyBranchInfo() {
+  return request({
+    url: 'system/my_branch/',
+    method: 'get'
+  })
+}
+
+// src/api/system.ts (在文件最下方补充)
+
+// 获取个人积分明细日志
+export function getPointsLogList(params?: any) {
+  return request({
+    url: 'system/points-logs/',
+    method: 'get',
+    params
+  })
+}

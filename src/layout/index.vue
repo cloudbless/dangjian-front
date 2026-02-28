@@ -26,7 +26,7 @@
           >
         </el-sub-menu>
 
-        <el-sub-menu index="/content" v-if="userRole === 'super_admin'">
+        <el-sub-menu index="/content" v-if="userRole === 'super_admin' || userRole === 'branch_admin'">
           <template #title>
             <span>📰 内容中心</span>
           </template>
@@ -37,12 +37,12 @@
           <span>🎓 学习中心</span>
         </el-menu-item>
 
-        <el-menu-item index="/practice" v-if="userRole === 'super_admin'">
+        <el-menu-item index="/practice" v-if="userRole === 'super_admin' || userRole === 'branch_admin'">
           <el-icon><Flag /></el-icon>
           <template #title>实践活动管理</template>
         </el-menu-item>
 
-        <el-menu-item index="/courses" v-if="userRole === 'super_admin'">
+        <el-menu-item index="/courses" v-if="userRole === 'super_admin' || userRole === 'branch_admin'">
           <el-icon><VideoCamera /></el-icon>
           <template #title>云端党校管理</template>
         </el-menu-item>

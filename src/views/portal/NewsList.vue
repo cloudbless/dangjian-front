@@ -1,8 +1,8 @@
 <template>
   <div class="news-list-container">
     <div class="page-banner">
-      <h1>📰 时政要闻</h1>
-      <p>权威发布，实时追踪。把握时代脉搏，学习最新精神。</p>
+      <h1>📰 {{ pageTitle }}</h1>
+      <p>{{ pageSubtitle }}</p>
     </div>
 
     <div class="content-wrapper">
@@ -13,11 +13,15 @@
           class="news-card"
           @click="$router.push(`/portal/article/${item.id}`)"
         >
+          <div class="news-cover" v-if="item.cover">
+             <el-image :src="item.cover" fit="cover" />
+          </div>
+
           <div class="news-content">
             <h3 class="news-title">{{ item.title }}</h3>
-            <p class="news-summary">{{ item.summary || '点击阅读全文...' }}</p>
+            <p class="news-summary">{{ item.summary || '暂无简介，点击阅读全文...' }}</p>
             <div class="news-meta">
-              <span>👤 发布人：{{ item.author_name }}</span>
+              <span>👤 发布人：{{ item.author_name || '管理员' }}</span>
               <span class="divider">|</span>
               <span>📅 发布日期：{{ new Date(item.created_at).toLocaleDateString() }}</span>
             </div>
@@ -25,7 +29,7 @@
           <el-icon class="arrow-icon"><ArrowRight /></el-icon>
         </div>
 
-        <el-empty v-if="newsList.length === 0" description="暂无相关新闻公告" />
+        <el-empty v-if="newsList.length === 0" description="暂无相关发布内容" />
 
         <div class="pagination-box" v-if="total > 0">
           <el-pagination
@@ -43,9 +47,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
+import { useRoute } from 'vue-router'
 import { getArticleList } from '../../api/content'
 import { ArrowRight } from '@element-plus/icons-vue'
+
+const route = useRoute()
 
 const loading = ref(false)
 const newsList = ref<any[]>([])
@@ -53,18 +60,38 @@ const total = ref(0)
 const currentPage = ref(1)
 const pageSize = ref(10)
 
+// 动态横幅数据
+const pageTitle = ref('')
+const pageSubtitle = ref('')
+
+// 根据文章类型动态设置横幅提示语
+const setBannerInfo = (type: number) => {
+  pageTitle.value = (route.meta.title as string) || '文章列表'
+  switch (type) {
+    case 1: pageSubtitle.value = '权威发布，实时追踪。把握时代脉搏，学习最新精神。'; break;
+    case 3: pageSubtitle.value = '展现先锋模范，弘扬榜样力量，记录优秀党员的点滴。'; break;
+    case 5: pageSubtitle.value = '海量党建资料，随时随地充电，提升党员理论素养。'; break;
+    case 6: pageSubtitle.value = '汇聚志愿微光，开展便民服务，践行党的初心使命。'; break;
+    default: pageSubtitle.value = '聚焦党建工作，传播党的声音。';
+  }
+}
+
 const fetchNews = async () => {
   loading.value = true
   try {
+    // 👇 获取路由中配置好的当前栏目文章类型
+    const currentType = Number(route.meta.articleType) || 1
+    
     const res: any = await getArticleList({
-      article_type: 1, // 只获取“今日时政”
+      article_type: currentType, 
+      scope: 'portal', // 👈 核心：只拉取超管发布的公开门户数据
       page: currentPage.value,
       size: pageSize.value
     })
-    newsList.value = res.results || []
+    newsList.value = res.results || res || []
     total.value = res.count || 0
   } catch (error) {
-    console.error("获取新闻失败", error)
+    console.error("获取数据失败", error)
   } finally {
     loading.value = false
   }
@@ -73,11 +100,23 @@ const fetchNews = async () => {
 const handlePageChange = (page: number) => {
   currentPage.value = page
   fetchNews()
-  // 滚动回顶部
   window.scrollTo({ top: 0, behavior: 'smooth' })
 }
 
+// 👇 核心修复：监听路由变化。因为不同的导航指向同一个组件，Vue会复用组件，我们需要监听参数变化来刷新数据
+watch(
+  () => route.meta.articleType,
+  (newType) => {
+    if (newType) {
+      currentPage.value = 1
+      setBannerInfo(Number(newType))
+      fetchNews()
+    }
+  }
+)
+
 onMounted(() => {
+  setBannerInfo(Number(route.meta.articleType) || 1)
   fetchNews()
 })
 </script>
@@ -109,6 +148,17 @@ onMounted(() => {
   border-color: #ce1126;
 }
 
+/* 封面图样式 */
+.news-cover {
+  width: 160px;
+  height: 100px;
+  margin-right: 20px;
+  border-radius: 6px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.news-cover .el-image { width: 100%; height: 100%; }
+
 .news-content { flex: 1; }
 .news-title { margin: 0 0 12px 0; font-size: 20px; color: #333; }
 .news-summary { font-size: 14px; color: #666; margin-bottom: 15px; line-height: 1.6; }
@@ -120,7 +170,6 @@ onMounted(() => {
 
 .pagination-box { margin-top: 40px; display: flex; justify-content: center; }
 
-/* 深度选择器修改分页颜色 */
 :deep(.el-pagination.is-background .el-pager li:not(.is-disabled).is-active) {
   background-color: #ce1126;
 }

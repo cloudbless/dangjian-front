@@ -72,6 +72,8 @@
             <el-option label="通知公告" :value="2" />
             <el-option label="党员风采" :value="3" />
             <el-option label="支部动态" :value="4" />
+            <el-option label="学习园地" :value="5" />
+            <el-option label="实践中心" :value="6" />
           </el-select>
         </el-form-item>
         

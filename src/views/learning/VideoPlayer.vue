@@ -9,7 +9,8 @@
     <el-row :gutter="20">
       <el-col :span="18">
         <el-card v-loading="loading">
-          <div class="video-wrapper">
+          
+          <div class="video-wrapper" v-if="course.course_type === 1 || !course.course_type">
             <video
               v-if="course.video_url"
               :src="course.video_url"
@@ -24,7 +25,6 @@
             >
               您的浏览器不支持视频播放。
             </video>
-
             <div v-else style="padding: 100px; text-align: center; color: #fff">
               正在努力加载视频资源...
             </div>
@@ -34,12 +34,28 @@
                 <span class="icon">⚠️</span>
                 <h3>学习已暂停</h3>
                 <p>系统检测到您切换了页面，请保持页面专注以继续学习。</p>
-                <el-button type="primary" @click="resumePlay"
-                  >继续学习</el-button
-                >
+                <el-button type="primary" @click="resumePlay">继续学习</el-button>
               </div>
             </div>
           </div>
+
+          <div class="exercise-wrapper" v-else-if="course.course_type === 2">
+            <div class="exercise-content">
+              {{ course.content }}
+            </div>
+            
+            <div class="exercise-actions">
+              <el-button 
+                type="success" 
+                size="large" 
+                @click="onExerciseFinished" 
+                :disabled="isCompleted"
+              >
+                {{ isCompleted ? '✅ 已完成学习' : '📝 我已完成练习 / 阅读' }}
+              </el-button>
+            </div>
+          </div>
+
         </el-card>
       </el-col>
 
@@ -47,11 +63,8 @@
         <el-card>
           <template #header><div>📊 学习进度</div></template>
           <div class="progress-info">
-            <p>
-              已看时长：<strong style="color: #ce1126">{{
-                Math.floor(currentTime)
-              }}</strong>
-              秒
+            <p v-if="course.course_type === 1 || !course.course_type">
+              已看时长：<strong style="color: #ce1126">{{ Math.floor(currentTime) }}</strong> 秒
             </p>
             <p>
               状态：
@@ -65,15 +78,14 @@
         </el-card>
 
         <el-card style="margin-top: 20px" v-if="isCompleted">
-          <template #header><div>✍️ 提交思想汇报</div></template>
-          <el-input
-            type="textarea"
-            :rows="4"
-            placeholder="请结合学习内容，谈谈您的心得体会..."
-          />
-          <el-button type="danger" style="margin-top: 10px; width: 100%"
-            >提交汇报</el-button
-          >
+          <template #header><div>✍️ 思想汇报</div></template>
+          <p style="font-size: 13px; color: #666; line-height: 1.6;">
+            您已完成该任务的学习！<br/>
+            请返回 <strong>"学习中心 -> 学习档案"</strong> 列表中，点击 <strong>"提交汇报"</strong> 填写您的心得体会。
+          </p>
+          <el-button type="primary" plain style="margin-top: 10px; width: 100%" @click="$router.push('/branch/learning')">
+            返回学习中心
+          </el-button>
         </el-card>
       </el-col>
     </el-row>
@@ -117,15 +129,16 @@ const onTimeUpdate = () => {
   }
 };
 
-// 3. 防挂机：监听网页可见性 (切屏检测)
+// 3. 防挂机：监听网页可见性 (仅针对视频)
 const handleVisibilityChange = () => {
+  if (course.value.course_type === 2) return; // 练习题不需要防挂机
+
   if (document.hidden && videoPlayer.value && !videoPlayer.value.paused) {
     videoPlayer.value.pause(); // 强制暂停
     showWarning.value = true; // 显示警告
   }
 };
 
-// 恢复播放
 const resumePlay = () => {
   showWarning.value = false;
   if (videoPlayer.value) {
@@ -133,7 +146,7 @@ const resumePlay = () => {
   }
 };
 
-// 4. 发送心跳包 (与后端同步进度)
+// 4. 与后端同步进度
 const sendHeartbeat = async (finished = false) => {
   if (!course.value.id) return;
   try {
@@ -142,7 +155,6 @@ const sendHeartbeat = async (finished = false) => {
       current_time: Math.floor(currentTime.value),
       is_finished: finished,
     });
-    // 如果后端检测到刚才刚好播完并加了积分，会返回提示
     if (res.message && res.message.includes("获得")) {
       ElMessage.success(res.message);
       isCompleted.value = true;
@@ -152,30 +164,37 @@ const sendHeartbeat = async (finished = false) => {
   }
 };
 
-// 视频开始播放时，启动心跳 (每10秒同步一次)
+// 视频开始播放时
 const onPlay = () => {
   if (!heartbeatTimer) {
     heartbeatTimer = setInterval(() => sendHeartbeat(false), 10000);
   }
 };
 
-// 视频暂停时，清除心跳
+// 视频暂停时
 const onPause = () => {
   if (heartbeatTimer) {
     clearInterval(heartbeatTimer);
     heartbeatTimer = null;
   }
-  sendHeartbeat(false); // 暂停时立刻同步一次
+  sendHeartbeat(false);
 };
 
 // 视频播完
 const onVideoEnded = () => {
   isCompleted.value = true;
-  sendHeartbeat(true); // 告诉后端我看完了！
+  sendHeartbeat(true);
   if (heartbeatTimer) {
     clearInterval(heartbeatTimer);
     heartbeatTimer = null;
   }
+};
+
+// 👇 新增：练习题/图文专用完成逻辑
+const onExerciseFinished = async () => {
+  currentTime.value = 100; // 象征性给个进度
+  isCompleted.value = true;
+  await sendHeartbeat(true); // 直接发送完毕信号
 };
 
 onMounted(async () => {
@@ -207,31 +226,33 @@ onBeforeUnmount(() => {
 }
 .cheat-warning {
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  top: 0; left: 0; right: 0; bottom: 0;
   background: rgba(0, 0, 0, 0.8);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 10;
+  display: flex; justify-content: center; align-items: center; z-index: 10;
 }
 .warning-box {
-  background: white;
-  padding: 40px;
-  border-radius: 8px;
+  background: white; padding: 40px; border-radius: 8px; text-align: center;
+}
+.warning-box .icon { font-size: 40px; }
+.warning-box h3 { color: #ce1126; margin: 15px 0; }
+
+.progress-info p { margin: 15px 0; font-size: 15px; }
+
+/* 图文/练习题样式 */
+.exercise-wrapper {
+  padding: 20px;
+  min-height: 400px;
+}
+.exercise-content {
+  font-size: 16px;
+  line-height: 1.8;
+  color: #333;
+  white-space: pre-wrap; /* 保持文本中的换行和空格 */
+  margin-bottom: 40px;
+}
+.exercise-actions {
   text-align: center;
-}
-.warning-box .icon {
-  font-size: 40px;
-}
-.warning-box h3 {
-  color: #ce1126;
-  margin: 15px 0;
-}
-.progress-info p {
-  margin: 15px 0;
-  font-size: 15px;
+  border-top: 1px dashed #eee;
+  padding-top: 30px;
 }
 </style>

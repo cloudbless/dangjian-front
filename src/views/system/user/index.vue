@@ -57,14 +57,16 @@
         </el-form-item>
         
         <el-form-item label="所属组织">
-          <el-select v-model="form.organization" placeholder="请选择支部" style="width: 100%" clearable>
-            <el-option 
-              v-for="item in orgOptions" 
-              :key="item.id" 
-              :label="item.name" 
-              :value="item.id" 
-            />
-          </el-select>
+          <el-tree-select 
+            v-model="form.organization" 
+            :data="orgOptions" 
+            :props="{ label: 'name', value: 'id', children: 'children' }"
+            node-key="id"
+            placeholder="请选择支部" 
+            style="width: 100%" 
+            clearable
+            check-strictly
+          />
         </el-form-item>
 
         <el-form-item label="角色">

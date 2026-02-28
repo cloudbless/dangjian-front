@@ -38,7 +38,13 @@ export function getMyStudyRecords() {
     method: 'get'
   })
 }
-
+export function updateStudyRecord(id: number, data: { feedback: string }) {
+  return request({
+    url: `learning/records/${id}/`,
+    method: 'patch', // 使用 PATCH 仅更新 feedback 字段
+    data
+  })
+}
 // ==========================================
 // 后台管理接口 (新增)
 // ==========================================

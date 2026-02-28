@@ -7,7 +7,7 @@
         <div class="nav-menu">
           <router-link to="/portal/home" class="nav-item">首页</router-link>
           <router-link to="/portal/news" class="nav-item">时政要闻</router-link>
-          <router-link to="/learning" class="nav-item">学习园地</router-link>
+          <router-link to="/portal/learning" class="nav-item">学习园地</router-link>
           <router-link to="/portal/showcase" class="nav-item"
             >党员风采</router-link
           >
