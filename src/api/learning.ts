@@ -74,3 +74,32 @@ export function deleteCourse(id: number) {
     method: 'delete' 
   })
 }
+// src/api/learning.ts (追加在文件末尾)
+
+// ==========================================
+// 习题管理接口 (新增)
+// ==========================================
+// 获取某课程下的所有习题
+export function getQuestions(course_id: number) {
+  return request({ url: 'learning/questions/', method: 'get', params: { course_id } })
+}
+// 新增习题
+export function addQuestion(data: any) {
+  return request({ url: 'learning/questions/', method: 'post', data })
+}
+// 修改习题
+export function updateQuestion(id: number, data: any) {
+  return request({ url: `learning/questions/${id}/`, method: 'put', data })
+}
+// 删除习题
+export function deleteQuestion(id: number) {
+  return request({ url: `learning/questions/${id}/`, method: 'delete' })
+}
+// 获取学情统计 (管理员专用)
+export function getBranchStats(params?: { org_id?: number | string }) {
+  return request({
+    url: 'learning/records/branch_stats/',
+    method: 'get',
+    params
+  })
+}

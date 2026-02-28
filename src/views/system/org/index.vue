@@ -33,8 +33,16 @@
           </template>
         </el-table-column>
 
-        <el-table-column label="操作" width="280" align="center">
+        <el-table-column label="操作" width="350" align="center">
           <template #default="scope">
+            <el-button 
+              v-if="userStore.userInfo?.role === 'super_admin'" 
+              link 
+              type="success" 
+              @click="enterBranch(scope.row)"
+            >
+              🚀 进入支部
+            </el-button>
             <el-button link type="primary" @click="handleAddChild(scope.row)">➕ 添加下级</el-button>
             <el-button link type="primary" @click="handleEdit(scope.row)">✏️ 编辑</el-button>
             <el-button link type="danger" @click="handleDelete(scope.row)">🗑️ 删除</el-button>
@@ -50,7 +58,7 @@
         </el-form-item>
 
         <el-form-item label="组织名称">
-          <el-input v-model="form.name" placeholder="例如：软件学院学生党支部" />
+          <el-input v-model="form.name" placeholder="例如：软件学院 student 党支部" />
         </el-form-item>
         
         <el-form-item label="层级">
@@ -75,17 +83,21 @@
 import { ref, reactive, onMounted } from 'vue'
 import { getOrgList, addOrg, updateOrg, deleteOrg } from '../../../api/org'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { useRouter } from 'vue-router' // 👇 引入路由
+import { useUserStore } from '../../../stores/user' // 👇 引入用户 Store
 
+const router = useRouter()
+const userStore = useUserStore()
 const loading = ref(false)
-const orgList = ref([]) // 树形数据
+const orgList = ref([]) 
 const dialogVisible = ref(false)
 const dialogTitle = ref('')
-const parentName = ref('') // 用于在弹窗显示上级名字
+const parentName = ref('') 
 
 const form = reactive<any>({
   id: undefined,
   name: '',
-  parent: null, // 父级ID
+  parent: null,
   level: 1,
   description: ''
 })
@@ -95,12 +107,22 @@ const getList = async () => {
   loading.value = true
   try {
     const res: any = await getOrgList()
-    // 假设后端返回的是 standard pagination { results: [] }
-    // 如果后端直接返回列表，就用 res
     orgList.value = res.results || res 
   } finally {
     loading.value = false
   }
+}
+
+// 👇 新增：超管进入支部视察逻辑
+const enterBranch = (row: any) => {
+  // 1. 将正在视察的支部信息存入本地存储，供 BranchLayout 和拦截器使用
+  localStorage.setItem('viewingOrgId', row.id.toString())
+  localStorage.setItem('viewingOrgName', row.name)
+  
+  ElMessage.success(`正在以视察模式进入: ${row.name}`)
+  
+  // 2. 跳转到支部端首页
+  router.push('/branch/home')
 }
 
 // 1. 新增一级党委
@@ -108,17 +130,17 @@ const handleAddRoot = () => {
   resetForm()
   form.level = 1
   form.parent = null
-  parentName.value = '' // 无上级
+  parentName.value = '' 
   dialogTitle.value = '新增一级党委'
   dialogVisible.value = true
 }
 
-// 2. 新增下级 (核心逻辑)
+// 2. 新增下级
 const handleAddChild = (row: any) => {
   resetForm()
-  form.parent = row.id          // 父级ID = 当前行ID
-  form.level = row.level + 1    // 层级 = 当前行层级 + 1
-  parentName.value = row.name   // 显示父级名称
+  form.parent = row.id      
+  form.level = row.level + 1 
+  parentName.value = row.name  
   dialogTitle.value = '新增下级组织'
   dialogVisible.value = true
 }
@@ -126,7 +148,6 @@ const handleAddChild = (row: any) => {
 // 3. 编辑
 const handleEdit = (row: any) => {
   Object.assign(form, row)
-  // 编辑时不显示上级名称，避免复杂逻辑，或者需要额外查询
   parentName.value = '' 
   dialogTitle.value = '编辑组织'
   dialogVisible.value = true
@@ -137,6 +158,8 @@ const resetForm = () => {
   form.id = undefined
   form.name = ''
   form.description = ''
+  form.parent = null
+  form.level = 1
 }
 
 // 提交
@@ -146,15 +169,19 @@ const submitForm = async () => {
     return
   }
 
-  if (form.id) {
-    await updateOrg(form.id, form)
-    ElMessage.success('修改成功')
-  } else {
-    await addOrg(form)
-    ElMessage.success('新增成功')
+  try {
+    if (form.id) {
+      await updateOrg(form.id, form)
+      ElMessage.success('修改成功')
+    } else {
+      await addOrg(form)
+      ElMessage.success('新增成功')
+    }
+    dialogVisible.value = false
+    getList()
+  } catch (err) {
+    ElMessage.error('操作失败')
   }
-  dialogVisible.value = false
-  getList()
 }
 
 // 删除
@@ -179,5 +206,11 @@ onMounted(() => {
 }
 .header-actions {
   margin-bottom: 20px;
+}
+/* 鼠标悬停在视察按钮上的特殊样式 */
+.el-button--success.is-link:hover {
+  background-color: #f0f9eb;
+  padding: 4px 8px;
+  border-radius: 4px;
 }
 </style>

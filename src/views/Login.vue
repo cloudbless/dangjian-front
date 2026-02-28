@@ -76,7 +76,7 @@ const handleLogin = async () => {
     ElMessage.success("登录成功");
 
     // 5. 使用 replace 替代 push，防止用户点击浏览器返回键又回到登录页
-    router.replace("/");
+    router.replace('/portal/home');
   } catch (error: any) {
     // 🎯 核心修复：捕获具体错误并弹出提示
     console.error("登录失败详情:", error);

@@ -33,19 +33,11 @@
           <el-menu-item index="/content/news">新闻发布</el-menu-item>
         </el-sub-menu>
 
-        <el-menu-item index="/learning">
-          <span>🎓 学习中心</span>
-        </el-menu-item>
-
         <el-menu-item index="/practice" v-if="userRole === 'super_admin' || userRole === 'branch_admin'">
           <el-icon><Flag /></el-icon>
           <template #title>实践活动管理</template>
         </el-menu-item>
 
-        <el-menu-item index="/courses" v-if="userRole === 'super_admin' || userRole === 'branch_admin'">
-          <el-icon><VideoCamera /></el-icon>
-          <template #title>云端党校管理</template>
-        </el-menu-item>
       </el-menu>
     </el-aside>
 

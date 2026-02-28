@@ -8,15 +8,20 @@ const service = axios.create({
   timeout: 5000 // 请求超时时间
 })
 
-// 2. 请求拦截器 (自动贴邮票)
+// 2. 请求拦截器
 service.interceptors.request.use(
   (config) => {
-    // 从本地存储中获取 Token
     const token = localStorage.getItem('token')
     if (token) {
-      // 如果有 Token，就加到 Header 里
       config.headers['Authorization'] = `Bearer ${token}`
     }
+    
+    // 👇 新增：如果处于视察模式，将支部ID放进 Header 中
+    const viewingOrgId = localStorage.getItem('viewingOrgId')
+    if (viewingOrgId) {
+      config.headers['X-Viewing-Org-Id'] = viewingOrgId
+    }
+    
     return config
   },
   (error) => {

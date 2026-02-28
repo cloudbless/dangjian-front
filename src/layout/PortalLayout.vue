@@ -8,12 +8,8 @@
           <router-link to="/portal/home" class="nav-item">首页</router-link>
           <router-link to="/portal/news" class="nav-item">时政要闻</router-link>
           <router-link to="/portal/learning" class="nav-item">学习园地</router-link>
-          <router-link to="/portal/showcase" class="nav-item"
-            >党员风采</router-link
-          >
-          <router-link to="/portal/practice" class="nav-item"
-            >实践中心</router-link
-          >
+          <router-link to="/portal/showcase" class="nav-item">党员风采</router-link>
+          <router-link to="/portal/practice" class="nav-item">实践中心</router-link>
         </div>
 
         <div class="auth-btn">
@@ -40,8 +36,8 @@
             </span>
             <template #dropdown>
               <el-dropdown-menu>
-                <el-dropdown-item @click="$router.push('/profile')">
-                  👤 我的名片
+                <el-dropdown-item @click="$router.push('/branch/home')">
+                  📱 进入支部端
                 </el-dropdown-item>
 
                 <el-dropdown-item
@@ -79,10 +75,8 @@ import { useUserStore } from "../stores/user";
 
 const userStore = useUserStore();
 
-
 const handleLogout = () => {
-  userStore.logout();
-  // 退出登录后，刷新页面以彻底清除组件缓存状态
+  userStore.logout(); //
   window.location.href = "/portal/home";
 };
 </script>

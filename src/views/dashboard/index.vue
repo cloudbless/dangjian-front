@@ -1,236 +1,276 @@
-import { ref, computed, onMounted, onBeforeUnmount, nextTick } from "vue";
 <template>
   <div class="dashboard-container">
-    <el-row :gutter="20">
-      <el-col :span="6" v-for="item in cardData" :key="item.title">
+    <el-row :gutter="20" class="panel-group">
+      <el-col :span="6">
         <el-card shadow="hover" class="data-card">
-          <template #header>
-            <div class="card-header">
-              <span>{{ item.icon }} {{ item.title }}</span>
-            </div>
-          </template>
-          <div class="card-value">{{ item.value }}</div>
+          <div class="card-title">总党员人数</div>
+          <div class="card-value text-blue">{{ summaryData.total_users }} <span class="unit">人</span></div>
+        </el-card>
+      </el-col>
+      <el-col :span="6">
+        <el-card shadow="hover" class="data-card">
+          <div class="card-title">党支部数量</div>
+          <div class="card-value text-red">{{ summaryData.total_orgs }} <span class="unit">个</span></div>
+        </el-card>
+      </el-col>
+      <el-col :span="6">
+        <el-card shadow="hover" class="data-card">
+          <div class="card-title">累计完成学习</div>
+          <div class="card-value text-orange">{{ summaryData.total_studies }} <span class="unit">次</span></div>
+        </el-card>
+      </el-col>
+      <el-col :span="6">
+        <el-card shadow="hover" class="data-card">
+          <div class="card-title">全平台总积分</div>
+          <div class="card-value text-green">{{ summaryData.total_points }} <span class="unit">分</span></div>
         </el-card>
       </el-col>
     </el-row>
 
-    <el-row :gutter="20" style="margin-top: 20px">
+    <el-row :gutter="20" class="panel-row">
       <el-col :span="12">
-        <el-card shadow="hover">
+        <el-card shadow="hover" class="data-panel">
           <template #header>
-            <div class="chart-header">
-              <span>📊 党员组织分布</span>
-            </div>
+            <div class="section-title">各支部积分活跃度进度</div>
           </template>
-          <div
-            ref="pieChartRef"
-            style="height: 350px"
-            v-loading="loading"
-          ></div>
+          <div class="progress-list" v-if="branchData.length > 0">
+            <div v-for="item in branchData" :key="item.name" class="progress-item">
+              <div class="item-header">
+                <span class="branch-name">{{ item.name }}</span>
+                <span class="member-count">
+                  <el-tag size="small" type="info" effect="plain">{{ item.members }} 人</el-tag>
+                </span>
+              </div>
+              <div class="progress-wrapper">
+                <span class="progress-label">活跃指数：</span>
+                <el-progress 
+                  :percentage="getPercentage(item.points)" 
+                  :stroke-width="12"
+                  :color="getProgressColor(getPercentage(item.points))" 
+                  :format="() => `${item.points} 分`"
+                />
+              </div>
+            </div>
+          </div>
+          <el-empty v-else description="暂无支部数据" />
         </el-card>
       </el-col>
 
       <el-col :span="12">
-        <el-card shadow="hover">
+        <el-card shadow="hover" class="data-panel">
           <template #header>
-            <div class="chart-header">
-              <span>📈 支部活跃度排名 (Top 5)</span>
-            </div>
+            <div class="section-title">党支部综合积分排行榜</div>
           </template>
-          <div
-            ref="barChartRef"
-            style="height: 350px"
-            v-loading="loading"
-          ></div>
+          <el-table :data="branchData" stripe style="width: 100%" height="420">
+            <el-table-column type="index" label="排名" width="80" align="center">
+              <template #default="scope">
+                <el-tag :type="scope.$index < 3 ? 'danger' : 'info'" effect="dark" round>
+                  TOP {{ scope.$index + 1 }}
+                </el-tag>
+              </template>
+            </el-table-column>
+            <el-table-column prop="name" label="支部名称" min-width="150" />
+            <el-table-column prop="members" label="党员人数" align="center" width="100" />
+            <el-table-column prop="points" label="支部总积分" align="center">
+              <template #default="scope">
+                <span style="color: #E6A23C; font-weight: bold; font-size: 16px;">
+                  {{ scope.row.points }}
+                </span>
+              </template>
+            </el-table-column>
+          </el-table>
         </el-card>
       </el-col>
     </el-row>
-
-    <el-card
-      v-if="userRole === 'super_admin' || userRole === 'branch_admin'"
-      class="welcome-card"
-      style="margin-top: 20px"
-    >
-      <h3>⚡ 快捷操作</h3>
-
-      <el-button
-        v-if="userRole === 'super_admin' || userRole === 'branch_admin'"
-        type="primary"
-        plain
-        @click="$router.push('/content/news')"
-      >
-        发布新闻
-      </el-button>
-
-      <el-button type="success" plain @click="$router.push('/system/users')">
-        新增党员
-      </el-button>
-
-      <el-button
-        v-if="userRole === 'super_admin'"
-        type="warning"
-        plain
-        @click="$router.push('/system/orgs')"
-      >
-        调整架构
-      </el-button>
-    </el-card>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onBeforeUnmount, nextTick } from "vue";
-import * as echarts from "echarts";
-import { ElMessage } from "element-plus";
-import { getDashboardStats } from "../../api/system";
+import { ref, computed, onMounted } from 'vue'
+import request from '../../utils/request' // 引入我们封装好的 axios
 
-// 🎯 引入 UserStore，用于获取当前登录人的角色
-import { useUserStore } from "../../stores/user";
+// 概览卡片数据源
+const summaryData = ref({
+  total_users: 0,
+  total_orgs: 0,
+  total_studies: 0,
+  total_points: 0
+})
 
-const userStore = useUserStore();
-// 动态计算角色，如果未拉取到则默认降级为 member
-const userRole = computed(() => userStore.userInfo?.role || "member");
+// 支部列表数据源
+const branchData = ref<any[]>([])
 
-const loading = ref(true);
+// 获取最高积分，用于计算进度条的百分比
+const maxPoints = computed(() => {
+  if (branchData.value.length === 0) return 100
+  const max = Math.max(...branchData.value.map(item => item.points))
+  return max === 0 ? 100 : max // 防止除以 0
+})
 
-const cardData = ref([
-  { title: "党员总数", value: "加载中...", icon: "📚" },
-  { title: "累计学习", value: "加载中...", icon: "🔥" },
-  { title: "支部数量", value: "加载中...", icon: "🚩" },
-  { title: "全网总积分", value: "加载中...", icon: "⭐" },
-]);
+// 根据分数计算进度条百分比（0-100）
+const getPercentage = (points: number) => {
+  return Number(((points / maxPoints.value) * 100).toFixed(1))
+}
 
-const pieChartRef = ref<HTMLElement | null>(null);
-const barChartRef = ref<HTMLElement | null>(null);
-let pieChart: echarts.ECharts | null = null;
-let barChart: echarts.ECharts | null = null;
+// 根据百分比动态改变进度条颜色
+const getProgressColor = (percentage: number) => {
+  if (percentage < 30) return '#F56C6C' // 红色
+  if (percentage < 70) return '#E6A23C' // 橙色
+  return '#67C23A' // 绿色
+}
 
-const initPieChart = (data: any[]) => {
-  if (!pieChartRef.value) return;
-  pieChart = echarts.init(pieChartRef.value);
-
-  const option = {
-    tooltip: { trigger: "item" },
-    legend: { bottom: "0%", left: "center" },
-    series: [
-      {
-        name: "党员人数",
-        type: "pie",
-        radius: ["40%", "70%"],
-        avoidLabelOverlap: false,
-        itemStyle: { borderRadius: 10, borderColor: "#fff", borderWidth: 2 },
-        label: { show: false, position: "center" },
-        emphasis: { label: { show: true, fontSize: 20, fontWeight: "bold" } },
-        data: data,
-      },
-    ],
-  };
-  pieChart.setOption(option);
-};
-
+// 🌐 核心：请求后端数据并进行清洗整合
 const fetchDashboardData = async () => {
   try {
-    loading.value = true;
-    const res: any = await getDashboardStats();
-
-    // 更新顶部卡片数据
-    cardData.value = [
-      { title: "党员总数", value: `${res.cards.total_users} 人`, icon: "📚" },
-      { title: "累计学习", value: `${res.cards.total_studies} 次`, icon: "🔥" },
-      { title: "支部数量", value: `${res.cards.total_orgs} 个`, icon: "🚩" },
-      { title: "全网总积分", value: `${res.cards.total_points} 分`, icon: "⭐" },
-    ];
-
-    // 🚩 关键：先关闭 loading，再在 nextTick 中初始化图表
-    loading.value = false; 
+    // 假设 system 是你在 Django urls 里的前缀，根据具体路由调整
+    const res: any = await request.get('system/stats/dashboard/') 
     
-    await nextTick(); // 等待 loading 遮罩彻底消失，DOM 尺寸稳定
-    
-    initPieChart(res.pie_data);
-    initBarChart(res.bar_data.categories, res.bar_data.values);
+    // 1. 赋值顶部卡片数据
+    if (res.cards) {
+      summaryData.value = {
+        total_users: res.cards.total_users || 0,
+        total_orgs: res.cards.total_orgs || 0,
+        total_studies: res.cards.total_studies || 0,
+        total_points: res.cards.total_points || 0
+      }
+    }
+
+    // 2. 将后端的 pie_data(人数) 和 bar_data(积分) 合并为一个完整的数组
+    const orgMap: Record<string, any> = {}
+
+    // 先遍历 pie_data 存入人数
+    if (res.pie_data) {
+      res.pie_data.forEach((item: any) => {
+        orgMap[item.name] = {
+          name: item.name,
+          members: item.value,
+          points: 0 // 初始化积分为0
+        }
+      })
+    }
+
+    // 再遍历 bar_data 存入积分
+    if (res.bar_data && res.bar_data.categories) {
+      res.bar_data.categories.forEach((category: string, index: number) => {
+        if (!orgMap[category]) {
+          orgMap[category] = { name: category, members: 0, points: 0 }
+        }
+        orgMap[category].points = res.bar_data.values[index]
+      })
+    }
+
+    // 3. 将 Map 转为数组，并根据积分从高到低排序
+    branchData.value = Object.values(orgMap).sort((a, b) => b.points - a.points)
+
   } catch (error) {
-    console.error(error);
-    loading.value = false;
-    ElMessage.error("获取大屏统计数据失败");
+    console.error('获取大屏数据失败:', error)
   }
-};
+}
 
-const initBarChart = (categories: string[], values: number[]) => {
-  if (!barChartRef.value) return;
-
-  // 🚩 优化：如果已经存在实例则销毁重建，防止黑屏或残留
-  if (barChart) {
-    barChart.dispose();
-  }
-  barChart = echarts.init(barChartRef.value);
-
-  const option = {
-    backgroundColor: 'transparent', // 显式设为透明，防止背景变黑
-    tooltip: { trigger: "axis", axisPointer: { type: "shadow" } },
-    grid: { left: "3%", right: "4%", bottom: "10%", containLabel: true },
-    xAxis: {
-      type: "category",
-      data: categories,
-      axisTick: { alignWithLabel: true },
-      axisLabel: { color: '#666' } // 显式文字颜色
-    },
-    yAxis: { 
-      type: "value",
-      axisLabel: { color: '#666' }
-    },
-    series: [
-      {
-        name: "总活跃积分",
-        type: "bar",
-        barWidth: "50%",
-        data: values,
-        itemStyle: {
-          // 🚩 检查颜色定义，确保没有拼写错误
-          color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-            { offset: 0, color: "#ce1126" },
-            { offset: 1, color: "#ff7f7f" },
-          ]),
-          borderRadius: [4, 4, 0, 0],
-        },
-      },
-    ],
-  };
-  barChart.setOption(option);
-};
-
-const handleResize = () => {
-  pieChart?.resize();
-  barChart?.resize();
-};
-
+// 组件挂载时自动发起请求
 onMounted(() => {
-  fetchDashboardData();
-  window.addEventListener("resize", handleResize);
-});
-
-onBeforeUnmount(() => {
-  window.removeEventListener("resize", handleResize);
-  pieChart?.dispose();
-  barChart?.dispose();
-});
+  fetchDashboardData()
+})
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .dashboard-container {
   padding: 20px;
-}
-.card-header {
-  font-weight: bold;
-  color: #666;
-}
-.card-value {
-  font-size: 28px;
-  font-weight: bold;
-  color: #ce1126;
-  text-align: center;
-  padding: 10px 0;
-}
-.chart-header {
-  font-weight: bold;
+  background-color: #f0f2f5;
+  min-height: calc(100vh - 60px);
+
+  .panel-group {
+    margin-bottom: 20px;
+
+    .data-card {
+      border-radius: 8px;
+      .card-title {
+        color: #909399;
+        font-size: 14px;
+        margin-bottom: 12px;
+        font-weight: bold;
+      }
+      .card-value {
+        font-size: 32px;
+        font-weight: bold;
+        .unit {
+          font-size: 14px;
+          color: #909399;
+          font-weight: normal;
+        }
+      }
+      .text-blue { color: #409EFF; }
+      .text-red { color: #c0392b; }
+      .text-orange { color: #E6A23C; }
+      .text-green { color: #67C23A; }
+    }
+  }
+
+  .panel-row {
+    .data-panel {
+      border-radius: 8px;
+      height: 100%;
+
+      .section-title {
+        font-size: 16px;
+        font-weight: bold;
+        color: #303133;
+        display: flex;
+        align-items: center;
+        &::before {
+          content: '';
+          display: inline-block;
+          width: 4px;
+          height: 16px;
+          background-color: #c0392b; 
+          margin-right: 8px;
+          border-radius: 2px;
+        }
+      }
+
+      .progress-list {
+        padding: 0 10px;
+        .progress-item {
+          margin-bottom: 24px;
+          &:last-child {
+            margin-bottom: 0;
+          }
+
+          .item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+
+            .branch-name {
+              font-size: 15px;
+              font-weight: 500;
+              color: #303133;
+            }
+          }
+
+          .progress-wrapper {
+            display: flex;
+            align-items: center;
+            
+            .progress-label {
+              font-size: 13px;
+              color: #909399;
+              width: 90px;
+            }
+            .el-progress {
+              flex: 1;
+              :deep(.el-progress__text) {
+                font-size: 13px !important;
+                font-weight: bold;
+                color: #606266;
+                min-width: 50px;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
 }
 </style>
