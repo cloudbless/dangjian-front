@@ -103,24 +103,24 @@ const handleLogout = () => {
 }
 
 .logo {
-  font-size: 24px;
+  font-size: 28px; /* 24px -> 28px，让左侧 Logo 更大气 */
   font-weight: bold;
   display: flex;
   align-items: center;
 }
 .logo .icon {
   margin-right: 10px;
-  font-size: 28px;
+  font-size: 32px; /* 28px -> 32px，图标同步放大 */
 }
 
 .nav-menu {
   display: flex;
-  gap: 30px;
+  gap: 60px; /* 可以将间距从 30px 改为 40px，让导航不那么拥挤 */
 }
 .nav-item {
   color: rgba(255, 255, 255, 0.85);
   text-decoration: none;
-  font-size: 16px;
+  font-size: 18px; /* 16px -> 18px，导航文字变大 */
   font-weight: 500;
   padding: 8px 0;
   border-bottom: 2px solid transparent;

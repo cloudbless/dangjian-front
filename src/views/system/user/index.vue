@@ -18,9 +18,9 @@
         <el-table-column prop="username" label="用户名" width="120" />
         <el-table-column label="角色" width="120">
           <template #default="scope">
-            <el-tag v-if="scope.row.role === 'super_admin'" type="danger">一级管理员</el-tag>
+            <el-tag v-if="scope.row.role === 'super_admin'" type="danger">党总支管理员</el-tag>
             <el-tag v-else-if="scope.row.role === 'branch_admin'" type="warning">支部管理员</el-tag>
-            <el-tag v-else-if="scope.row.role === 'member'" type="success">普通党员</el-tag>
+            <el-tag v-else-if="scope.row.role === 'member'" type="success">正式党员</el-tag>
             <el-tag v-else type="info">{{ scope.row.role }}</el-tag>
           </template>
         </el-table-column>
@@ -71,9 +71,9 @@
 
         <el-form-item label="角色">
           <el-select v-model="form.role" placeholder="请选择角色" style="width: 100%">
-            <el-option label="普通党员" value="member" />
+            <el-option label="正式党员" value="member" />
             <el-option label="支部管理员" value="branch_admin" />
-            <el-option label="一级管理员" value="super_admin" />
+            <el-option label="党总支管理员" value="super_admin" />
           </el-select>
         </el-form-item>
 

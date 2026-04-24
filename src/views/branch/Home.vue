@@ -161,30 +161,31 @@ onMounted(() => {
   padding-top: 10px;
 }
 
-.card-header { font-weight: bold; font-size: 16px; color: #333; }
+.card-header { font-weight: bold; font-size: 18px; color: #333; } /* 16px -> 18px */
 
 /* 组织架构卡片样式 */
 .org-card { height: 100%; min-height: 500px; }
-.org-name { color: #ce1126; margin-top: 10px; margin-bottom: 10px; font-size: 22px; }
-.org-desc { color: #666; font-size: 14px; line-height: 1.6; margin-bottom: 30px; }
+.org-name { color: #ce1126; margin-top: 10px; margin-bottom: 10px; font-size: 26px; } /* 22px -> 26px */
+.org-desc { color: #666; font-size: 16px; line-height: 1.6; margin-bottom: 30px; } /* 14px -> 16px */
 
 .org-stats { background: #fff9f9; padding: 20px; border-radius: 8px; text-align: center; border: 1px solid #ffe6e6; }
-.stat-value { font-size: 32px; font-weight: bold; color: #ce1126; }
-.stat-value .unit { font-size: 14px; font-weight: normal; }
-.stat-label { font-size: 13px; color: #999; margin-top: 5px; }
+.stat-value { font-size: 38px; font-weight: bold; color: #ce1126; } /* 32px -> 38px */
+.stat-value .unit { font-size: 16px; font-weight: normal; } /* 14px -> 16px */
+.stat-label { font-size: 15px; color: #999; margin-top: 5px; } /* 13px -> 15px */
 
-.committee-box h3 { font-size: 16px; color: #333; margin-bottom: 15px; }
-.admin-tag { margin-right: 10px; margin-bottom: 10px; font-size: 14px; padding: 15px 12px; }
+.committee-box h3 { font-size: 18px; color: #333; margin-bottom: 15px; } /* 16px -> 18px */
+.admin-tag { margin-right: 10px; margin-bottom: 10px; font-size: 15px; padding: 18px 14px; } /* 14px -> 15px */
 
 /* 文章列表样式 */
 .news-card { min-height: 500px; }
+.branch-tabs :deep(.el-tabs__item) { font-size: 16px; } /* ElementPlus Tab字体变大 */
 .branch-tabs :deep(.el-tabs__item.is-active) { color: #ce1126; font-weight: bold; }
 .branch-tabs :deep(.el-tabs__active-bar) { background-color: #ce1126; }
 
 .article-list { padding: 10px 0; }
 .article-item { 
   display: flex; 
-  padding: 15px; 
+  padding: 18px 15px; 
   border-bottom: 1px solid #f0f0f0; 
   cursor: pointer; 
   transition: all 0.3s;
@@ -193,19 +194,19 @@ onMounted(() => {
 .article-item:hover { background-color: #fafafa; transform: translateX(5px); }
 .article-item:last-child { border-bottom: none; }
 
-.article-cover { width: 120px; height: 80px; border-radius: 4px; margin-right: 15px; flex-shrink: 0; }
+.article-cover { width: 140px; height: 90px; border-radius: 4px; margin-right: 15px; flex-shrink: 0; }
 .article-info { flex: 1; display: flex; flex-direction: column; justify-content: center; }
-.article-title { margin: 0 0 8px 0; font-size: 16px; color: #333; }
-.article-summary { font-size: 13px; color: #666; margin: 0 0 8px 0; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-.article-meta { display: flex; justify-content: space-between; font-size: 12px; color: #999; }
+.article-title { margin: 0 0 8px 0; font-size: 18px; font-weight: bold; color: #333; } /* 16px -> 18px */
+.article-summary { font-size: 15px; color: #666; margin: 0 0 8px 0; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.5; } /* 13px -> 15px */
+.article-meta { display: flex; justify-content: space-between; font-size: 14px; color: #999; } /* 12px -> 14px */
 
 /* 通知专属样式 */
 .notice-item { align-items: center; }
 .notice-icon { 
-  width: 40px; height: 40px; 
+  width: 45px; height: 45px; 
   background-color: #fff1f0; color: #ce1126; 
   border-radius: 50%; 
   display: flex; justify-content: center; align-items: center; 
-  font-size: 20px; margin-right: 15px; 
+  font-size: 22px; margin-right: 15px; 
 }
 </style>

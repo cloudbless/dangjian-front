@@ -40,3 +40,7 @@ export function deleteArticle(id: number) {
     method: 'delete'
   })
 }
+export const toggleArticleLike = (id: number) => {
+  // 注意：此处假定你封装的 request 是 axios 实例
+  return request.post(`/content/articles/${id}/like/`)
+}

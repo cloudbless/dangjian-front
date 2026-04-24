@@ -3,7 +3,7 @@
     <el-card>
       <template #header>
         <div class="card-header">
-          <span>🎓 云端党校 - 必修课程</span>
+          <span>🎓 云端党校 - 课程大厅</span>
         </div>
       </template>
 
@@ -15,14 +15,25 @@
                 {{ course.course_type === 2 ? '📝 图文/练习' : '🎬 视频课程' }}
               </span>
               
+              <span class="req-tag" :class="course.is_required ? 'is-req' : 'is-opt'">
+                {{ course.is_required ? '必修' : '选修' }}
+              </span>
+              
               <span class="points-tag">+{{ course.points_reward }} 积分</span>
             </div>
             <div style="padding: 14px">
-              <h3 class="course-title">{{ course.title }}</h3>
+              <h3 class="course-title" :title="course.title">{{ course.title }}</h3>
               <p class="course-desc">{{ course.description || '暂无简介' }}</p>
               <div class="bottom">
-                <span class="publisher">发布人: {{ course.publisher_name }}</span>
-                <el-button type="danger" size="small" @click="goToStudy(course)">立即学习</el-button>
+                <span class="publisher">发布人: {{ course.publisher_name || '管理员' }}</span>
+                
+                <el-button 
+                  :type="course.my_record?.is_completed ? 'success' : 'danger'" 
+                  size="small" 
+                  @click="goToStudy(course)"
+                >
+                  {{ course.my_record?.is_completed ? '✅ 已完成' : '立即学习' }}
+                </el-button>
               </div>
             </div>
           </el-card>
@@ -36,31 +47,48 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { getCourseList } from '../../api/learning'
+import { getCourseList, getMyStudyRecords } from '../../api/learning'
+import { useUserStore } from '../../stores/user'
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
+const userStore = useUserStore()
 const loading = ref(false)
 const courseList = ref<any[]>([])
 
 const fetchCourses = async () => {
   loading.value = true
   try {
+    // 1. 获取所有课程列表
     const res: any = await getCourseList()
-    courseList.value = res.results || res
+    const courseData = res.results || res || []
+
+    // 2. 如果用户已登录，获取学习记录
+    let recordData: any[] = []
+    if (userStore.token) {
+      try {
+        const resRecords: any = await getMyStudyRecords()
+        recordData = resRecords.results || resRecords || []
+      } catch (e) {
+        console.error('获取学习记录失败', e)
+      }
+    }
+
+    // 3. 数据缝合：将学习记录绑定到对应课程上
+    courseList.value = courseData.map((course: any) => {
+      const record = recordData.find((r: any) => r.course === course.id)
+      return { ...course, my_record: record || null }
+    })
+
   } finally {
     loading.value = false
   }
 }
 
-// 👇 修改：根据 course_type 跳转到不同的页面
-// 👇 修改：跳转路径前加上 /branch
 const goToStudy = (course: any) => {
   if (course.course_type === 2) {
-    // 图文/练习类型 -> 跳转到支部端的在线答题页
     router.push(`/branch/learning/exam/${course.id}`)
   } else {
-    // 默认视频类型 -> 跳转到支部端的视频播放页
     router.push(`/branch/learning/video/${course.id}`)
   }
 }
@@ -81,7 +109,7 @@ onMounted(() => {
   background-position: center;
   position: relative;
 }
-/* 👇 新增：课程类型标签样式 */
+
 .type-tag {
   position: absolute;
   top: 10px;
@@ -93,6 +121,22 @@ onMounted(() => {
   font-weight: bold;
   box-shadow: 0 2px 4px rgba(0,0,0,0.2);
 }
+
+/* 👇 新增：必修/选修标签样式，位置排在类型标签后面 */
+.req-tag {
+  position: absolute;
+  top: 10px;
+  left: 105px; 
+  color: #fff;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: bold;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+.req-tag.is-req { background: #f56c6c; } /* 必修红色 */
+.req-tag.is-opt { background: #909399; } /* 选修灰色 */
+
 .points-tag {
   position: absolute;
   top: 10px;

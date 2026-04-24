@@ -197,7 +197,7 @@ const handlePageChange = (page: number) => {
 // 辅助方法：翻译角色
 const getRoleName = (role: string) => {
   const roleMap: Record<string, string> = {
-    'super_admin': '一级管理员',
+    'super_admin': '党总支管理员',
     'branch_admin': '支部管理员',
     'member': '普通党员'
   }

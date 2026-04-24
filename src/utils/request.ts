@@ -4,7 +4,8 @@ import { ElMessage } from 'element-plus'
 
 // 1. 创建 axios 实例
 const service = axios.create({
-  baseURL: 'http://127.0.0.1:8000/api/', // 指向你的 Django 后端
+  baseURL: 'http://127.0.0.1:8000/api/', // 指向你的 
+  // Django 后端
   timeout: 5000 // 请求超时时间
 })
 

@@ -5,14 +5,28 @@
         <el-button type="primary" @click="handleCreate">✍️ 发布文章</el-button>
       </div>
 
-      <el-table :data="list" v-loading="loading" border style="margin-top: 20px">
+      <el-table
+        :data="list"
+        v-loading="loading"
+        border
+        style="margin-top: 20px"
+      >
         <el-table-column prop="id" label="ID" width="60" />
-        <el-table-column prop="title" label="标题" min-width="200" show-overflow-tooltip />
+        <el-table-column
+          prop="title"
+          label="标题"
+          min-width="200"
+          show-overflow-tooltip
+        />
         <el-table-column prop="article_type" label="类型" width="120">
           <template #default="{ row }">
             <el-tag v-if="row.article_type === 1">今日时政</el-tag>
-            <el-tag v-else-if="row.article_type === 2" type="warning">通知公告</el-tag>
-            <el-tag v-else-if="row.article_type === 3" type="success">党员风采</el-tag>
+            <el-tag v-else-if="row.article_type === 2" type="warning"
+              >通知公告</el-tag
+            >
+            <el-tag v-else-if="row.article_type === 3" type="success"
+              >党员风采</el-tag
+            >
             <el-tag v-else type="info">支部动态</el-tag>
           </template>
         </el-table-column>
@@ -24,17 +38,31 @@
         </el-table-column>
         <el-table-column label="操作" width="180">
           <template #default="{ row }">
-            <el-button link type="primary" @click="handleEdit(row)">编辑</el-button>
-            <el-button link type="danger" @click="handleDelete(row)">删除</el-button>
+            <el-button link type="primary" @click="handleEdit(row)"
+              >编辑</el-button
+            >
+            <el-button link type="danger" @click="handleDelete(row)"
+              >删除</el-button
+            >
           </template>
         </el-table-column>
       </el-table>
+
+      <div class="pagination-container">
+        <el-pagination
+          v-model:current-page="queryParams.page"
+          v-model:page-size="queryParams.pageSize"
+          :total="queryParams.total"
+          layout="total, prev, pager, next"
+          @current-change="handlePageChange"
+        />
+      </div>
     </el-card>
 
-    <el-dialog 
-      v-model="dialogVisible" 
-      :title="dialogTitle" 
-      width="900px" 
+    <el-dialog
+      v-model="dialogVisible"
+      :title="dialogTitle"
+      width="900px"
       destroy-on-close
       :close-on-click-modal="false"
     >
@@ -45,10 +73,15 @@
               <el-input v-model="form.title" placeholder="请输入文章标题" />
             </el-form-item>
             <el-form-item label="文章摘要">
-              <el-input v-model="form.summary" type="textarea" rows="3" placeholder="简要介绍文章内容..." />
+              <el-input
+                v-model="form.summary"
+                type="textarea"
+                rows="3"
+                placeholder="简要介绍文章内容..."
+              />
             </el-form-item>
           </el-col>
-          
+
           <el-col :span="8">
             <el-form-item label="封面图">
               <el-upload
@@ -76,9 +109,9 @@
             <el-option label="实践中心" :value="6" />
           </el-select>
         </el-form-item>
-        
+
         <el-form-item label="正文内容">
-          <div style="border: 1px solid #ccc; width: 100%;">
+          <div style="border: 1px solid #ccc; width: 100%">
             <Toolbar
               style="border-bottom: 1px solid #ccc"
               :editor="editorRef"
@@ -86,7 +119,7 @@
               mode="default"
             />
             <Editor
-              style="height: 400px; overflow-y: hidden;"
+              style="height: 400px; overflow-y: hidden"
               v-model="form.content"
               :defaultConfig="editorConfig"
               mode="default"
@@ -97,162 +130,201 @@
       </el-form>
       <template #footer>
         <el-button @click="dialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="handleSubmit" :loading="submitLoading">确认发布</el-button>
+        <el-button type="primary" @click="handleSubmit" :loading="submitLoading"
+          >确认发布</el-button
+        >
       </template>
     </el-dialog>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, shallowRef, onBeforeUnmount } from 'vue'
-import { getArticleList, addArticle, updateArticle, deleteArticle } from '../../../api/content'
-import { ElMessage, ElMessageBox } from 'element-plus'
-import { Plus } from '@element-plus/icons-vue'
-import '@wangeditor/editor/dist/css/style.css'
-import { Editor, Toolbar } from '@wangeditor/editor-for-vue'
+import { ref, reactive, onMounted, shallowRef, onBeforeUnmount } from "vue";
+import {
+  getArticleList,
+  addArticle,
+  updateArticle,
+  deleteArticle,
+} from "../../../api/content";
+import { ElMessage, ElMessageBox } from "element-plus";
+import { Plus } from "@element-plus/icons-vue";
+import "@wangeditor/editor/dist/css/style.css";
+import { Editor, Toolbar } from "@wangeditor/editor-for-vue";
 
 // --- 编辑器相关 ---
-const editorRef = shallowRef()
-const toolbarConfig = {}
+const editorRef = shallowRef();
+const toolbarConfig = {};
 // --- 编辑器相关配置 ---
-const editorConfig = { 
-  placeholder: '请输入正文内容...',
+const editorConfig = {
+  placeholder: "请输入正文内容...",
   MENU_CONF: {
     // 配置上传图片
     uploadImage: {
       // 后端上传接口地址
-      server: 'http://127.0.0.1:8000/api/upload/image/', 
+      server: "http://127.0.0.1:8000/api/upload/image/",
       // 单个文件的最大体积限制 (2M)
       maxFileSize: 2 * 1024 * 1024,
       // 自定义上传参数
-      fieldName: 'wangeditor-uploaded-image',
+      fieldName: "wangeditor-uploaded-image",
       // 请求头，如果后端开启了 JWT 认证，这里需要传 Token
       headers: {
-        Authorization: `Bearer ${localStorage.getItem('token')}`
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
       },
       // 上传成功后的回调（可选，用于调试）
       onSuccess(file: File, res: any) {
-        console.log('图片上传成功', res)
+        console.log("图片上传成功", res);
       },
       // 上传失败
       onFailed(file: File, res: any) {
-        ElMessage.error('图片上传失败')
-      }
-    }
-  }
-}
+        ElMessage.error("图片上传失败");
+      },
+    },
+  },
+};
 
 onBeforeUnmount(() => {
-    const editor = editorRef.value
-    if (editor == null) return
-    editor.destroy()
-})
+  const editor = editorRef.value;
+  if (editor == null) return;
+  editor.destroy();
+});
 
 const handleCreated = (editor: any) => {
-  editorRef.value = editor
-}
+  editorRef.value = editor;
+};
 
 // --- 封面上传逻辑 ---
-const imageUrl = ref('')
-const rawFile = ref<File | null>(null)
+const imageUrl = ref("");
+const rawFile = ref<File | null>(null);
 
 const handleCoverChange = (file: any) => {
   // 预览图片
-  imageUrl.value = URL.createObjectURL(file.raw)
+  imageUrl.value = URL.createObjectURL(file.raw);
   // 保存文件对象用于提交
-  rawFile.value = file.raw
-}
+  rawFile.value = file.raw;
+};
 
 // --- 业务逻辑 ---
-const loading = ref(false)
-const submitLoading = ref(false)
-const list = ref([])
-const dialogVisible = ref(false)
-const dialogTitle = ref('')
+const loading = ref(false);
+const submitLoading = ref(false);
+const list = ref([]);
+const dialogVisible = ref(false);
+const dialogTitle = ref("");
+
+// ✨ 修复处 1：在这里定义分页相关的数据模型
+const queryParams = reactive({
+  page: 1,
+  pageSize: 10,
+  total: 0,
+});
 
 const form = reactive({
   id: undefined,
-  title: '',
-  summary: '',
+  title: "",
+  summary: "",
   article_type: 1,
-  content: ''
-})
+  content: "",
+});
 
+// ✨ 修复处 2：将分页参数传给接口，并正确接收总数
 const getList = async () => {
-  loading.value = true
-  const res: any = await getArticleList({})
-  list.value = res.results || res
-  loading.value = false
-}
+  loading.value = true;
+  const res: any = await getArticleList({
+    page: queryParams.page,
+    page_size: queryParams.pageSize,
+  });
+  list.value = res.results || res;
+  queryParams.total = res.count || 0;
+  loading.value = false;
+};
+
+// ✨ 修复处 3：处理分页器翻页事件
+const handlePageChange = (val: number) => {
+  queryParams.page = val;
+  getList();
+};
 
 const handleCreate = () => {
-  form.id = undefined
-  form.title = ''
-  form.summary = ''
-  form.article_type = 1
-  form.content = ''
-  imageUrl.value = ''
-  rawFile.value = null
-  dialogTitle.value = '发布新文章'
-  dialogVisible.value = true
-}
+  form.id = undefined;
+  form.title = "";
+  form.summary = "";
+  form.article_type = 1;
+  form.content = "";
+  imageUrl.value = "";
+  rawFile.value = null;
+  dialogTitle.value = "发布新文章";
+  dialogVisible.value = true;
+};
 
 const handleEdit = (row: any) => {
-  Object.assign(form, row)
-  imageUrl.value = row.cover // 显示已有封面
-  rawFile.value = null // 重置新上传文件
-  dialogTitle.value = '编辑文章'
-  dialogVisible.value = true
-}
+  Object.assign(form, row);
+  imageUrl.value = row.cover; // 显示已有封面
+  rawFile.value = null; // 重置新上传文件
+  dialogTitle.value = "编辑文章";
+  dialogVisible.value = true;
+};
 
 const handleSubmit = async () => {
-  if (!form.title) return ElMessage.warning('标题不能为空')
-  
-  submitLoading.value = true
+  if (!form.title) return ElMessage.warning("标题不能为空");
+
+  submitLoading.value = true;
   // === 关键：使用 FormData 包装数据以支持文件上传 ===
-  const formData = new FormData()
-  formData.append('title', form.title)
-  formData.append('summary', form.summary)
-  formData.append('article_type', form.article_type.toString())
-  formData.append('content', form.content)
-  
+  const formData = new FormData();
+  formData.append("title", form.title);
+  formData.append("summary", form.summary);
+  formData.append("article_type", form.article_type.toString());
+  formData.append("content", form.content);
+
   if (rawFile.value) {
-    formData.append('cover', rawFile.value)
+    formData.append("cover", rawFile.value);
   }
 
   try {
     if (form.id) {
-      await updateArticle(form.id, formData)
-      ElMessage.success('更新成功')
+      await updateArticle(form.id, formData);
+      ElMessage.success("更新成功");
     } else {
-      await addArticle(formData)
-      ElMessage.success('发布成功')
+      await addArticle(formData);
+      ElMessage.success("发布成功");
     }
-    dialogVisible.value = false
-    getList()
+    dialogVisible.value = false;
+    getList();
   } catch (err) {
-    console.error(err)
+    console.error(err);
   } finally {
-    submitLoading.value = false
+    submitLoading.value = false;
   }
-}
+};
 
 const handleDelete = (row: any) => {
-  ElMessageBox.confirm('确认删除该文章吗?', '提示', { type: 'warning' }).then(async () => {
-    await deleteArticle(row.id)
-    ElMessage.success('已删除')
-    getList()
-  })
-}
+  ElMessageBox.confirm("确认删除该文章吗?", "提示", { type: "warning" }).then(
+    async () => {
+      await deleteArticle(row.id);
+      ElMessage.success("已删除");
+      getList();
+    },
+  );
+};
 
 onMounted(() => {
-  getList()
-})
+  getList();
+});
 </script>
 
 <style scoped>
-.app-container { padding: 20px; }
-.header-actions { display: flex; justify-content: flex-end; }
+.app-container {
+  padding: 20px;
+}
+.header-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* ✨ 修复处 4：增加分页容器的右对齐样式 ✨ */
+.pagination-container {
+  margin-top: 20px;
+  display: flex;
+  justify-content: flex-end;
+}
 
 /* 上传组件样式 */
 .cover-uploader {

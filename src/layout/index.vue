@@ -131,10 +131,14 @@ onMounted(async () => {
   height: 60px;
   line-height: 60px;
   text-align: center;
-  font-size: 20px;
+  font-size: 22px; /* 20px -> 22px */
   font-weight: bold;
   background-color: #ce1126;
   color: white;
+}
+/* 覆盖 Element Plus 侧边栏菜单字号 */
+:deep(.el-menu-item), :deep(.el-sub-menu__title) {
+  font-size: 16px;
 }
 .header {
   background-color: white;
@@ -143,6 +147,12 @@ onMounted(async () => {
   justify-content: space-between;
   align-items: center;
   padding: 0 20px;
+}
+/* 新增面包屑字体大小 */
+.breadcrumb {
+  font-size: 18px; 
+  font-weight: bold;
+  color: #333;
 }
 .el-main {
   background-color: #f0f2f5;
@@ -154,5 +164,6 @@ onMounted(async () => {
   align-items: center;
   font-weight: 500;
   color: #333;
+  font-size: 16px; /* 用户名变大 */
 }
 </style>
