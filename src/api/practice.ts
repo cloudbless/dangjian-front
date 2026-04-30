@@ -6,9 +6,13 @@ import request from '../utils/request'
 export function getPracticeList(params?: any) {
   return request({ url: 'practice/activities/', method: 'get', params })
 }
-// 党员报名实践活动
+// 👇 修复前台报名404：将 signups 改为 registrations
 export function signUpActivity(data: { activity: number }) {
-  return request({ url: 'practice/signups/', method: 'post', data })
+  return request({ url: 'practice/registrations/', method: 'post', data })
+}
+// 个人中心：获取我的报名记录
+export function getMyPracticeRegistrations(params?: any) {
+  return request({ url: '/practice/registrations/my/', method: 'get', params })
 }
 
 // === 后台管理员接口 ===
@@ -24,11 +28,23 @@ export function updatePractice(id: number, data: any) {
 export function deletePractice(id: number) {
   return request({ url: `practice/activities/${id}/`, method: 'delete' })
 }
-// 获取报名名单 (可以传 activity_id 进行过滤)
+// 👇 修复后台拉取名单404：将 signups 改为 registrations
 export function getSignUpList(params?: any) {
-  return request({ url: 'practice/signups/', method: 'get', params })
+  return request({ url: 'practice/registrations/', method: 'get', params })
 }
-// 管理员确认签到并发送积分
-export function confirmAttendance(id: number) {
-  return request({ url: `practice/signups/${id}/confirm_attendance/`, method: 'post' })
+
+// 👇 核心新增：第一阶段（审核报名：1通过，2驳回）
+export function auditSignUp(id: number, data: { status: number }) {
+  return request({ url: `practice/registrations/${id}/audit/`, method: 'post', data })
+}
+
+// 👇 核心新增：第二阶段（发放积分）
+export function grantPoints(id: number) {
+  return request({ url: `practice/registrations/${id}/grant_points/`, method: 'post' })
+}
+export function cancelSignUpActivity(activityId: number) {
+  return request({ 
+    url: `/practice/activities/${activityId}/cancel_signup/`, 
+    method: 'post' 
+  })
 }

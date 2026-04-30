@@ -78,7 +78,7 @@
         <el-row :gutter="20" v-loading="loadingPractice">
           <el-col :span="6" v-for="item in practiceList" :key="item.id">
             <el-card :body-style="{ padding: '0px' }" shadow="hover" class="style-card" @click="goToDetail(item.id)">
-              <img :src="item.cover || defaultCover" class="image" />
+              <el-image :src="item.cover || defaultCover" class="image" fit="cover" />
               <div style="padding: 14px;">
                 <h4 class="card-title-text">{{ item.title }}</h4>
                 <p class="desc">{{ item.summary || '汇聚志愿微光，开展便民服务。' }}</p>

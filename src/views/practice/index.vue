@@ -42,15 +42,7 @@
           <el-input v-model="form.location" placeholder="例如：阳光苑社区党群服务中心" />
         </el-form-item>
         <el-form-item label="活动时间" required>
-          <el-date-picker
-            v-model="timeRange"
-            type="datetimerange"
-            range-separator="至"
-            start-placeholder="开始时间"
-            end-placeholder="结束时间"
-            value-format="YYYY-MM-DDTHH:mm:ss"
-            style="width: 100%"
-          />
+          <el-date-picker v-model="timeRange" type="datetimerange" value-format="YYYY-MM-DDTHH:mm:ss" style="width: 100%" />
         </el-form-item>
         <el-row>
           <el-col :span="12">
@@ -65,7 +57,7 @@
           </el-col>
         </el-row>
         <el-form-item label="活动详情">
-          <el-input type="textarea" v-model="form.content" :rows="4" placeholder="请输入活动具体要求..." />
+          <el-input type="textarea" v-model="form.content" :rows="4" />
         </el-form-item>
       </el-form>
       <template #footer>
@@ -74,32 +66,42 @@
       </template>
     </el-dialog>
 
-    <el-drawer v-model="drawerVisible" :title="`报名管理 - ${currentActivity?.title}`" size="50%">
+    <el-drawer v-model="drawerVisible" :title="`报名管理 - ${currentActivity?.title}`" size="55%">
       <el-table :data="signupList" v-loading="drawerLoading" border>
-        <el-table-column prop="user_name" label="党员姓名" width="120" />
-        <el-table-column label="报名时间" width="180">
+        <el-table-column label="党员姓名" width="120">
+          <template #default="{ row }">{{ row.username || row.user_name }}</template>
+        </el-table-column>
+        <el-table-column label="报名时间" width="170">
           <template #default="{ row }">
             {{ new Date(row.created_at).toLocaleString() }}
           </template>
         </el-table-column>
-        <el-table-column label="状态" width="120">
+        <el-table-column label="当前状态" width="100" align="center">
           <template #default="{ row }">
             <el-tag v-if="row.status === 0" type="info">待审核</el-tag>
-            <el-tag v-else-if="row.status === 1" type="primary">报名成功</el-tag>
-            <el-tag v-else-if="row.status === 3" type="success">已签到(发积分)</el-tag>
+            <el-tag v-else-if="row.status === 1" type="primary">已通过</el-tag>
+            <el-tag v-else-if="row.status === 2" type="danger">已驳回</el-tag>
+            <el-tag v-else-if="row.status === 3" type="success">已发分</el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="操作">
+        <el-table-column label="操作流程管理" min-width="200">
           <template #default="{ row }">
-            <el-button 
-              v-if="row.status !== 3" 
-              type="success" 
-              size="small" 
-              @click="handleConfirm(row)"
-            >
-              ✅ 确认签到 (发积分)
-            </el-button>
-            <span v-else style="color: #67C23A; font-size: 13px;">积分已发放</span>
+            <template v-if="row.status === 0">
+              <el-button type="primary" size="small" plain @click="handleAudit(row, 1)">允许参与</el-button>
+              <el-button type="danger" size="small" plain @click="handleAudit(row, 2)">驳回报名</el-button>
+            </template>
+
+            <template v-else-if="row.status === 1">
+              <el-button type="warning" size="small" @click="handleGrantPoints(row)">🏆 结项发分</el-button>
+              <el-button type="info" size="small" link @click="handleAudit(row, 0)">撤回审核</el-button>
+            </template>
+
+            <template v-else-if="row.status === 2">
+              <span style="color: #F56C6C; font-size: 13px; margin-right: 10px;">已驳回</span>
+              <el-button type="info" size="small" link @click="handleAudit(row, 0)">撤回重审</el-button>
+            </template>
+
+            <span v-else-if="row.status === 3" style="color: #67C23A; font-size: 13px; font-weight: bold;">流程已结束 (积分已发)</span>
           </template>
         </el-table-column>
       </el-table>
@@ -109,7 +111,8 @@
 
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
-import { getPracticeList, addPractice, updatePractice, deletePractice, getSignUpList, confirmAttendance } from '../../api/practice'
+// 👇 引入新的 api 方法
+import { getPracticeList, addPractice, updatePractice, deletePractice, getSignUpList, auditSignUp, grantPoints } from '../../api/practice'
 import { ElMessage, ElMessageBox } from 'element-plus'
 
 // --- 活动列表逻辑 ---
@@ -131,42 +134,23 @@ const dialogVisible = ref(false)
 const dialogTitle = ref('发布新活动')
 const timeRange = ref<[string, string] | null>(null)
 const form = reactive({
-  id: undefined as number | undefined,
-  title: '',
-  location: '',
-  content: '',
-  start_time: '',
-  end_time: '',
-  capacity: 50,
-  points_reward: 5
+  id: undefined as number | undefined, title: '', location: '', content: '', start_time: '', end_time: '', capacity: 50, points_reward: 5
 })
 
 const handleCreate = () => {
-  form.id = undefined
-  form.title = ''
-  form.location = ''
-  form.content = ''
-  form.capacity = 50
-  form.points_reward = 5
-  timeRange.value = null
-  dialogTitle.value = '发布新活动'
-  dialogVisible.value = true
+  form.id = undefined; form.title = ''; form.location = ''; form.content = ''; form.capacity = 50; form.points_reward = 5; timeRange.value = null
+  dialogTitle.value = '发布新活动'; dialogVisible.value = true
 }
 
 const handleEdit = (row: any) => {
   Object.assign(form, row)
   timeRange.value = [row.start_time, row.end_time]
-  dialogTitle.value = '编辑活动'
-  dialogVisible.value = true
+  dialogTitle.value = '编辑活动'; dialogVisible.value = true
 }
 
 const handleSubmit = async () => {
-  if (!form.title || !timeRange.value) {
-    return ElMessage.warning('请填写完整带星号的必填项')
-  }
-  form.start_time = timeRange.value[0]
-  form.end_time = timeRange.value[1]
-
+  if (!form.title || !timeRange.value) return ElMessage.warning('请填写完整')
+  form.start_time = timeRange.value[0]; form.end_time = timeRange.value[1]
   try {
     if (form.id) {
       await updatePractice(form.id, form)
@@ -177,20 +161,17 @@ const handleSubmit = async () => {
     }
     dialogVisible.value = false
     fetchList()
-  } catch (error) {
-    ElMessage.error('操作失败')
-  }
+  } catch (error) { ElMessage.error('操作失败') }
 }
 
 const handleDelete = (row: any) => {
-  ElMessageBox.confirm('删除后相关报名记录也会被清空，确认删除?', '警告', { type: 'warning' }).then(async () => {
+  ElMessageBox.confirm('确认删除?', '警告', { type: 'warning' }).then(async () => {
     await deletePractice(row.id)
-    ElMessage.success('已删除')
-    fetchList()
+    ElMessage.success('已删除'); fetchList()
   })
 }
 
-// --- 报名审核逻辑 (Drawer抽屉) ---
+// --- 报名审核抽屉逻辑 ---
 const drawerVisible = ref(false)
 const drawerLoading = ref(false)
 const signupList = ref<any[]>([])
@@ -201,7 +182,6 @@ const openSignUpManage = async (row: any) => {
   drawerVisible.value = true
   drawerLoading.value = true
   try {
-    // 过滤：只获取当前活动 id 的报名记录
     const res: any = await getSignUpList({ activity: row.id })
     signupList.value = res.results || res
   } finally {
@@ -209,16 +189,32 @@ const openSignUpManage = async (row: any) => {
   }
 }
 
-// 核心：确认签到，发放积分
-const handleConfirm = async (row: any) => {
-  ElMessageBox.confirm(`确认【${row.user_name}】已参与活动并为其发放积分吗？`, '签到确认', { type: 'success' }).then(async () => {
+// 👇 动作1：审核操作 (1 通过, 2 驳回)
+const handleAudit = async (row: any, status: number) => {
+  const actionText = status === 1 ? '允许其参与' : '驳回'
+  const name = row.username || row.user_name
+  ElMessageBox.confirm(`确认${actionText}【${name}】的报名请求吗？`, '审核提示', { type: 'warning' }).then(async () => {
     try {
-      const res: any = await confirmAttendance(row.id)
-      ElMessage.success(res.message || '签到成功，已发放积分')
-      // 刷新名单
-      openSignUpManage(currentActivity.value)
+      await auditSignUp(row.id, { status })
+      ElMessage.success('操作成功')
+      openSignUpManage(currentActivity.value) // 刷新抽屉列表
     } catch (e) {
-      ElMessage.error('操作失败')
+      ElMessage.error('审核操作失败')
+    }
+  })
+}
+
+// 👇 动作2：发分操作
+const handleGrantPoints = async (row: any) => {
+  const name = row.username || row.user_name
+  ElMessageBox.confirm(`活动结束后，确认给【${name}】发放 ${currentActivity.value.points_reward} 积分吗？`, '发放奖励', { type: 'success' }).then(async () => {
+    try {
+      const res: any = await grantPoints(row.id)
+      ElMessage.success(res.message || '积分发放成功')
+      openSignUpManage(currentActivity.value) // 刷新抽屉列表
+    } catch (e: any) {
+      // 显示后端返回的具体拦截错误（如：已发放过）
+      ElMessage.error(e.response?.data?.error || '积分发放失败')
     }
   })
 }

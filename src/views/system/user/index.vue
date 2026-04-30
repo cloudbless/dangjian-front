@@ -2,8 +2,8 @@
   <div class="app-container">
     <el-card class="search-box">
       <el-form :inline="true" :model="queryParams">
-        <el-form-item label="用户名">
-          <el-input v-model="queryParams.username" placeholder="请输入用户名" clearable />
+        <el-form-item label="姓名/账号">
+          <el-input v-model="queryParams.username" placeholder="请输入关键词" clearable />
         </el-form-item>
         <el-form-item>
           <el-button type="primary" @click="handleQuery">🔍 搜索</el-button>
@@ -14,25 +14,42 @@
 
     <el-card class="table-box">
       <el-table :data="userList" border stripe v-loading="loading">
-        <el-table-column prop="id" label="ID" width="70" />
-        <el-table-column prop="username" label="用户名" width="120" />
-        <el-table-column label="角色" width="120">
+        <el-table-column prop="id" label="ID" width="70" align="center" />
+        
+        <el-table-column label="党员姓名(点击查看档案)" width="180">
           <template #default="scope">
-            <el-tag v-if="scope.row.role === 'super_admin'" type="danger">党总支管理员</el-tag>
-            <el-tag v-else-if="scope.row.role === 'branch_admin'" type="warning">支部管理员</el-tag>
-            <el-tag v-else-if="scope.row.role === 'member'" type="success">正式党员</el-tag>
+            <el-link type="primary" :underline="false" @click="showUserCard(scope.row)">
+              <span style="font-weight: bold;">{{ scope.row.real_name || scope.row.username }}</span>
+            </el-link>
+          </template>
+        </el-table-column>
+
+        <el-table-column label="角色" width="130" align="center">
+          <template #default="scope">
+            <el-tag v-if="scope.row.role === 'super_admin'" type="danger" effect="dark">党总支管理员</el-tag>
+            <el-tag v-else-if="scope.row.role === 'branch_admin'" type="warning" effect="dark">支部书记</el-tag>
+            <el-tag v-else-if="scope.row.role === 'member'" type="danger" effect="plain">正式党员</el-tag>
             <el-tag v-else type="info">{{ scope.row.role }}</el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="organization_name" label="所属组织" />
-        <el-table-column prop="phone" label="手机号" width="120" />
-        <el-table-column prop="total_points" label="积分" width="90" sortable />
         
-        <el-table-column label="操作" width="240" align="center">
+        <el-table-column prop="organization_name" label="所属组织" min-width="150" />
+        <el-table-column prop="phone" label="手机号" width="130" />
+        
+        <el-table-column label="性别" width="80" align="center">
           <template #default="scope">
-            <el-button size="small" @click="handleEdit(scope.row)">编辑</el-button>
-            <el-button size="small" type="warning" @click="handleResetPwd(scope.row)">重置</el-button>
-            <el-button size="small" type="danger" @click="handleDelete(scope.row)">删除</el-button>
+            <el-tag v-if="scope.row.gender === 1" size="small">男</el-tag>
+            <el-tag v-else-if="scope.row.gender === 2" type="danger" size="small">女</el-tag>
+          </template>
+        </el-table-column>
+
+        <el-table-column prop="total_points" label="学习积分" width="100" sortable align="center" />
+        
+        <el-table-column label="操作" width="220" align="center" fixed="right">
+          <template #default="scope">
+            <el-button size="small" type="primary" plain @click="handleEdit(scope.row)">编辑</el-button>
+            <el-button size="small" type="warning" plain @click="handleResetPwd(scope.row)">重置</el-button>
+            <el-button size="small" type="danger" plain @click="handleDelete(scope.row)">删除</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -50,35 +67,78 @@
       </div>
     </el-card>
 
-    <el-dialog :title="dialogTitle" v-model="dialogVisible" width="500px">
+    <el-dialog :title="dialogTitle" v-model="dialogVisible" width="650px" top="5vh">
       <el-form :model="form" label-width="90px">
-        <el-form-item label="用户名">
-          <el-input v-model="form.username" :disabled="!!form.id" />
-        </el-form-item>
-        
+        <el-row :gutter="20">
+          <el-col :span="12">
+            <el-form-item label="登录账号">
+              <el-input v-model="form.username" :disabled="!!form.id" placeholder="必填，用于登录" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="真实姓名">
+              <el-input v-model="form.real_name" placeholder="请输入真实姓名" />
+            </el-form-item>
+          </el-col>
+        </el-row>
+
+        <el-row :gutter="20">
+          <el-col :span="12">
+            <el-form-item label="手机号码">
+              <el-input v-model="form.phone" placeholder="请输入手机号" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="性别">
+              <el-select v-model="form.gender" style="width: 100%">
+                <el-option label="男" :value="1" />
+                <el-option label="女" :value="2" />
+              </el-select>
+            </el-form-item>
+          </el-col>
+        </el-row>
+
+        <el-row :gutter="20">
+          <el-col :span="12">
+            <el-form-item label="身份证号">
+              <el-input v-model="form.identity_card" placeholder="请输入身份证号" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="出生日期">
+              <el-date-picker v-model="form.birthday" type="date" value-format="YYYY-MM-DD" style="width: 100%" placeholder="选择日期" />
+            </el-form-item>
+          </el-col>
+        </el-row>
+
+        <el-row :gutter="20">
+          <el-col :span="12">
+            <el-form-item label="系统角色">
+              <el-select v-model="form.role" style="width: 100%">
+                <el-option label="正式党员" value="member" />
+                <el-option label="支部管理员" value="branch_admin" />
+                <el-option label="党总支管理员" value="super_admin" />
+              </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="入党时间">
+              <el-date-picker v-model="form.join_party_date" type="date" value-format="YYYY-MM-DD" style="width: 100%" placeholder="选择日期" />
+            </el-form-item>
+          </el-col>
+        </el-row>
+
         <el-form-item label="所属组织">
           <el-tree-select 
             v-model="form.organization" 
             :data="orgOptions" 
             :props="{ label: 'name', value: 'id', children: 'children' }"
             node-key="id"
-            placeholder="请选择支部" 
+            placeholder="请选择归属党支部" 
             style="width: 100%" 
             clearable
             check-strictly
           />
-        </el-form-item>
-
-        <el-form-item label="角色">
-          <el-select v-model="form.role" placeholder="请选择角色" style="width: 100%">
-            <el-option label="正式党员" value="member" />
-            <el-option label="支部管理员" value="branch_admin" />
-            <el-option label="党总支管理员" value="super_admin" />
-          </el-select>
-        </el-form-item>
-
-        <el-form-item label="手机号">
-          <el-input v-model="form.phone" />
         </el-form-item>
       </el-form>
       <template #footer>
@@ -92,19 +152,40 @@
         <el-form-item label="新密码">
           <el-input v-model="newPwd" placeholder="请输入新密码" show-password />
         </el-form-item>
-        <p style="color: #999; font-size: 12px; margin-left: 80px;">重置后请告知党员及时修改</p>
+        <p style="color: #999; font-size: 12px; margin-left: 80px;">重置后请告知党员及时登录修改</p>
       </el-form>
       <template #footer>
         <el-button @click="pwdVisible = false">取消</el-button>
         <el-button type="warning" @click="submitResetPwd">确认重置</el-button>
       </template>
     </el-dialog>
+
+    <el-drawer v-model="cardVisible" title="📜 党员数字档案" direction="rtl" size="400px">
+      <div v-if="activeUser" class="drawer-content">
+        <div class="user-avatar-box">
+          <el-avatar :size="90" :src="activeUser.avatar || 'https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png'" />
+          <h3>{{ activeUser.real_name || activeUser.username }}</h3>
+          <el-tag type="danger" effect="dark" size="small">{{ activeUser.organization_name || '未分配支部' }}</el-tag>
+        </div>
+
+        <el-descriptions :column="1" border size="default" class="user-desc">
+          <el-descriptions-item label="登录账号">{{ activeUser.username }}</el-descriptions-item>
+          <el-descriptions-item label="性别">{{ activeUser.gender === 1 ? '男' : (activeUser.gender === 2 ? '女' : '未知') }}</el-descriptions-item>
+          <el-descriptions-item label="手机号码">{{ activeUser.phone || '未填写' }}</el-descriptions-item>
+          <el-descriptions-item label="身份证号">{{ activeUser.identity_card || '未填写' }}</el-descriptions-item>
+          <el-descriptions-item label="出生日期">{{ activeUser.birthday || '未填写' }}</el-descriptions-item>
+          <el-descriptions-item label="入党时间">{{ activeUser.join_party_date || '未填写' }}</el-descriptions-item>
+          <el-descriptions-item label="当前积分">
+            <span style="color: #ce1126; font-weight: bold; font-size: 16px;">{{ activeUser.total_points }} 分</span>
+          </el-descriptions-item>
+        </el-descriptions>
+      </div>
+    </el-drawer>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
-// 🎯 补全了 resetUserPassword 的导入
 import { getUserList, addUser, updateUser, deleteUser, getOrgList, resetUserPassword } from '../../../api/system'
 import { ElMessage, ElMessageBox } from 'element-plus'
 
@@ -120,12 +201,22 @@ const pwdVisible = ref(false)
 const newPwd = ref('123456')
 const currentUserId = ref(0)
 
+// 🎯 名片抽屉控制
+const cardVisible = ref(false)
+const activeUser = ref<any>(null)
+
 const queryParams = reactive({ page: 1, size: 10, username: '' })
 
+// 🎯 初始化表单数据（包含所有新增字段）
 const form = reactive<any>({
   id: undefined,
   username: '',
-  role: 'member', // 🎯 初始值也改为 'member'
+  real_name: '',
+  gender: 1,
+  identity_card: '',
+  birthday: '',
+  join_party_date: '',
+  role: 'member', 
   organization: null,
   phone: ''
 })
@@ -153,17 +244,26 @@ const fetchOrgs = async () => {
 const handleQuery = () => { queryParams.page = 1; getList(); }
 
 const handleAdd = () => {
-  Object.assign(form, { id: undefined, username: '', role: 'member', organization: null, phone: '' })
-  dialogTitle.value = '新增党员'
+  // 恢复默认的空表单
+  Object.assign(form, { 
+    id: undefined, username: '', real_name: '', gender: 1, 
+    identity_card: '', birthday: '', join_party_date: '',
+    role: 'member', organization: null, phone: '' 
+  })
+  dialogTitle.value = '新增党员档案'
   dialogVisible.value = true
 }
 
 const handleEdit = (row: any) => {
-  // 🎯 将整行数据拷贝到表单
-  // 注意：后端返回的 row.organization 应该是 ID，如果是对象则需要 row.organization.id
   Object.assign(form, row)
   dialogTitle.value = '编辑党员信息'
   dialogVisible.value = true
+}
+
+// 🎯 触发侧边栏名片
+const showUserCard = (row: any) => {
+  activeUser.value = row
+  cardVisible.value = true
 }
 
 const submitForm = async () => {
@@ -178,7 +278,6 @@ const submitForm = async () => {
     dialogVisible.value = false
     getList()
   } catch (error: any) {
-    // 捕获后端返回的详细错误并展示
     const errorData = error.response?.data
     if (errorData) {
       const firstError = Object.values(errorData)[0]
@@ -204,8 +303,8 @@ const submitResetPwd = async () => {
 }
 
 const handleDelete = (row: any) => {
-  ElMessageBox.confirm(`确认删除党员 [${row.username}] 吗?`, '警告', { 
-    type: 'warning',
+  ElMessageBox.confirm(`确认删除党员 [${row.real_name || row.username}] 的档案吗? 该操作不可逆！`, '严重警告', { 
+    type: 'error',
     confirmButtonText: '确定删除',
     cancelButtonText: '取消'
   }).then(async () => {
@@ -224,5 +323,18 @@ onMounted(() => {
 <style scoped>
 .app-container { padding: 20px; }
 .search-box { margin-bottom: 20px; }
+.table-box { border-radius: 8px; }
 .pagination-container { margin-top: 20px; display: flex; justify-content: flex-end; }
+
+/* 名片抽屉样式优化 */
+.drawer-content { padding: 0 10px; }
+.user-avatar-box { 
+  text-align: center; 
+  margin-bottom: 30px; 
+  padding-bottom: 20px; 
+  border-bottom: 1px dashed #eee; 
+}
+.user-avatar-box h3 { margin: 15px 0 10px; font-size: 20px; color: #333; }
+.user-desc { margin-top: 20px; }
+:deep(.el-descriptions__label) { width: 100px; color: #666; background-color: #fafafa !important;}
 </style>
