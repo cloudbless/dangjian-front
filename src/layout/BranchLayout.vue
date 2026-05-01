@@ -94,9 +94,12 @@ const isViewing = computed(() => {
   return viewingOrgName.value !== null && userStore.userInfo?.role === "super_admin";
 });
 
+
 const orgName = computed(() => {
+  // 视察模式下返回被视察的组织名
   if (isViewing.value) return viewingOrgName.value;
-  return userStore.userInfo?.organization_name || "未分配支部";
+  // 正常模式下返回自己的组织名，如果没有则显示默认提示
+  return userStore.userInfo?.organization_name || "未分配党支部"; 
 });
 
 const exitViewing = () => {

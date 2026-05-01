@@ -26,9 +26,11 @@
 
         <el-table-column label="角色" width="130" align="center">
           <template #default="scope">
-            <el-tag v-if="scope.row.role === 'super_admin'" type="danger" effect="dark">党总支管理员</el-tag>
-            <el-tag v-else-if="scope.row.role === 'branch_admin'" type="warning" effect="dark">支部书记</el-tag>
+            <el-tag v-if="scope.row.role === 'super_admin'" type="danger" effect="dark">党委书记</el-tag>
+            <el-tag v-else-if="scope.row.role === 'branch_admin'" type="warning" effect="dark">党支部书记</el-tag>
             <el-tag v-else-if="scope.row.role === 'member'" type="danger" effect="plain">正式党员</el-tag>
+            <!-- 👇 新增：预备党员的标签展示 -->
+            <el-tag v-else-if="scope.row.role === 'probationary_member'" type="warning" effect="plain">预备党员</el-tag>
             <el-tag v-else type="info">{{ scope.row.role }}</el-tag>
           </template>
         </el-table-column>
@@ -45,9 +47,13 @@
 
         <el-table-column prop="total_points" label="学习积分" width="100" sortable align="center" />
         
-        <el-table-column label="操作" width="220" align="center" fixed="right">
+        <el-table-column label="操作" width="280" align="center" fixed="right">
           <template #default="scope">
             <el-button size="small" type="primary" plain @click="handleEdit(scope.row)">编辑</el-button>
+            
+            <!-- 👇 新增：纪实档案跳转按钮 -->
+            <el-button size="small" type="success" plain @click="$router.push(`/system/users/record/${scope.row.id}`)">纪实档案</el-button>
+            
             <el-button size="small" type="warning" plain @click="handleResetPwd(scope.row)">重置</el-button>
             <el-button size="small" type="danger" plain @click="handleDelete(scope.row)">删除</el-button>
           </template>
@@ -116,8 +122,10 @@
             <el-form-item label="系统角色">
               <el-select v-model="form.role" style="width: 100%">
                 <el-option label="正式党员" value="member" />
-                <el-option label="支部管理员" value="branch_admin" />
-                <el-option label="党总支管理员" value="super_admin" />
+                <!-- 👇 新增：预备党员的选择项 -->
+                <el-option label="预备党员" value="probationary_member" />
+                <el-option label="党支部书记" value="branch_admin" />
+                <el-option label="党委书记" value="super_admin" />
               </el-select>
             </el-form-item>
           </el-col>
@@ -160,25 +168,103 @@
       </template>
     </el-dialog>
 
-    <el-drawer v-model="cardVisible" title="📜 党员数字档案" direction="rtl" size="400px">
+    <!-- 🎯 优化：党员发展全流程数字档案名片侧边抽屉 -->
+    <el-drawer v-model="cardVisible" title="📜 党员发展纪实数字档案" direction="rtl" size="55%">
       <div v-if="activeUser" class="drawer-content">
+        <!-- 头部简要信息 -->
         <div class="user-avatar-box">
-          <el-avatar :size="90" :src="activeUser.avatar || 'https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png'" />
+          <el-avatar :size="80" :src="activeUser.avatar || 'https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png'" />
           <h3>{{ activeUser.real_name || activeUser.username }}</h3>
           <el-tag type="danger" effect="dark" size="small">{{ activeUser.organization_name || '未分配支部' }}</el-tag>
+          <p style="margin-top: 10px; color: #ce1126; font-weight: bold;">累计积分：{{ activeUser.total_points }} 分</p>
         </div>
 
-        <el-descriptions :column="1" border size="default" class="user-desc">
-          <el-descriptions-item label="登录账号">{{ activeUser.username }}</el-descriptions-item>
+        <!-- 1. 基础信息 -->
+        <el-descriptions title="一、 基础信息" :column="2" border size="small" class="record-section">
+          <el-descriptions-item label="姓名">{{ activeUser.real_name || activeUser.username }}</el-descriptions-item>
           <el-descriptions-item label="性别">{{ activeUser.gender === 1 ? '男' : (activeUser.gender === 2 ? '女' : '未知') }}</el-descriptions-item>
-          <el-descriptions-item label="手机号码">{{ activeUser.phone || '未填写' }}</el-descriptions-item>
-          <el-descriptions-item label="身份证号">{{ activeUser.identity_card || '未填写' }}</el-descriptions-item>
-          <el-descriptions-item label="出生日期">{{ activeUser.birthday || '未填写' }}</el-descriptions-item>
-          <el-descriptions-item label="入党时间">{{ activeUser.join_party_date || '未填写' }}</el-descriptions-item>
-          <el-descriptions-item label="当前积分">
-            <span style="color: #ce1126; font-weight: bold; font-size: 16px;">{{ activeUser.total_points }} 分</span>
-          </el-descriptions-item>
+          <el-descriptions-item label="民族">{{ activeUser.nation || '未填写' }}</el-descriptions-item>
+          <el-descriptions-item label="籍贯">{{ activeUser.native_place || '未填写' }}</el-descriptions-item>
+          <el-descriptions-item label="班级/部门">{{ activeUser.class_name || '未填写' }}</el-descriptions-item>
+          <el-descriptions-item label="电话号码">{{ activeUser.phone || '未填写' }}</el-descriptions-item>
+          <el-descriptions-item label="身份证号码" :span="2">{{ activeUser.identity_card || '未填写' }}</el-descriptions-item>
         </el-descriptions>
+
+        <!-- 2. 申请入党[cite: 3] -->
+        <el-descriptions title="二、 申请入党" :column="2" border size="small" class="record-section">
+          <el-descriptions-item label="递交入党申请书时间" :span="2">{{ activeUser.app_submit_time || '未填写' }}</el-descriptions-item>
+          <el-descriptions-item label="党组织派人谈话时间">{{ activeUser.app_talk_time || '未填写' }}</el-descriptions-item>
+          <el-descriptions-item label="谈话人">{{ activeUser.app_talker || '未填写' }}</el-descriptions-item>
+        </el-descriptions>
+
+        <!-- 3. 入党积极分子的确定和培养教育[cite: 3] -->
+        <el-descriptions title="三、 入党积极分子的确定和培养教育" :column="2" border size="small" class="record-section">
+          <el-descriptions-item label="优团/党员推荐时间">{{ activeUser.activist_recommend_time || '未填写' }}</el-descriptions-item>
+          <el-descriptions-item label="推荐情况">{{ activeUser.activist_recommend_desc || '未填写' }}</el-descriptions-item>
+          <el-descriptions-item label="确定积极分子时间">{{ activeUser.activist_confirm_time || '未填写' }}</el-descriptions-item>
+          <el-descriptions-item label="表决情况">{{ activeUser.activist_vote_desc || '未填写' }}</el-descriptions-item>
+          <el-descriptions-item label="公示时间">{{ activeUser.activist_public_time || '未填写' }}</el-descriptions-item>
+          <el-descriptions-item label="公示情况">{{ activeUser.activist_public_desc || '未填写' }}</el-descriptions-item>
+          <el-descriptions-item label="审批时间">{{ activeUser.activist_approve_time || '未填写' }}</el-descriptions-item>
+          <el-descriptions-item label="上级党委审批意见">{{ activeUser.activist_approve_opinion || '未填写' }}</el-descriptions-item>
+        </el-descriptions>
+
+        <!-- 4. 培养联系人[cite: 3] -->
+        <el-descriptions title="四、 培养联系人" :column="2" border size="small" class="record-section">
+          <el-descriptions-item label="联系人(1)姓名">{{ activeUser.contact1_name || '未填写' }}</el-descriptions-item>
+          <el-descriptions-item label="联系电话">{{ activeUser.contact1_phone || '未填写' }}</el-descriptions-item>
+          <el-descriptions-item label="联系人(2)姓名">{{ activeUser.contact2_name || '未填写' }}</el-descriptions-item>
+          <el-descriptions-item label="联系电话">{{ activeUser.contact2_phone || '未填写' }}</el-descriptions-item>
+        </el-descriptions>
+
+        <!-- 5. 发展对象的确定和考察[cite: 3] -->
+        <el-descriptions title="五、 发展对象的确定和考察" :column="2" border size="small" class="record-section">
+          <el-descriptions-item label="征求群众意见座谈会时间" :span="2">{{ activeUser.target_mass_meeting_time || '未填写' }}</el-descriptions-item>
+          <el-descriptions-item label="支委会/大会讨论时间" :span="2">{{ activeUser.confirm_target_meeting_time || '未填写' }}</el-descriptions-item>
+          <el-descriptions-item label="公示时间">{{ activeUser.target_public_time || '未填写' }}</el-descriptions-item>
+          <el-descriptions-item label="公示情况">{{ activeUser.target_public_desc || '未填写' }}</el-descriptions-item>
+          <el-descriptions-item label="审批时间">{{ activeUser.target_approve_time || '未填写' }}</el-descriptions-item>
+          <el-descriptions-item label="上级审批意见">{{ activeUser.target_approve_opinion || '未填写' }}</el-descriptions-item>
+          <el-descriptions-item label="发展对象培训时间">{{ activeUser.target_train_time || '未填写' }}</el-descriptions-item>
+          <el-descriptions-item label="政审情况">{{ activeUser.target_pol_check || '未填写' }}</el-descriptions-item>
+        </el-descriptions>
+
+        <!-- 6. 预备党员的接收[cite: 3] -->
+        <el-descriptions title="六、 预备党员的接收" :column="2" border size="small" class="record-section">
+          <el-descriptions-item label="上级党委预审时间">{{ activeUser.probation_pre_check_time || '未填写' }}</el-descriptions-item>
+          <el-descriptions-item label="培训情况">{{ activeUser.probation_train_desc || '未填写' }}</el-descriptions-item>
+          <el-descriptions-item label="拟接收公示时间">{{ activeUser.probation_public_time || '未填写' }}</el-descriptions-item>
+          <el-descriptions-item label="公示情况">{{ activeUser.probation_public_desc || '未填写' }}</el-descriptions-item>
+          <el-descriptions-item label="大会讨论接收时间">{{ activeUser.probation_meeting_time || '未填写' }}</el-descriptions-item>
+          <el-descriptions-item label="表决情况">{{ activeUser.probation_vote_desc || '未填写' }}</el-descriptions-item>
+          <el-descriptions-item label="上级派人谈话时间">{{ activeUser.probation_talk_time || '未填写' }}</el-descriptions-item>
+          <el-descriptions-item label="谈话人">{{ activeUser.probation_talker || '未填写' }}</el-descriptions-item>
+          <el-descriptions-item label="审批时间">{{ activeUser.probation_approve_time || '未填写' }}</el-descriptions-item>
+          <el-descriptions-item label="上级审批意见">{{ activeUser.probation_approve_opinion || '未填写' }}</el-descriptions-item>
+        </el-descriptions>
+
+        <!-- 7. 入党介绍人[cite: 3] -->
+        <el-descriptions title="七、 入党介绍人" :column="2" border size="small" class="record-section">
+          <el-descriptions-item label="介绍人(1)姓名">{{ activeUser.intro1_name || '未填写' }}</el-descriptions-item>
+          <el-descriptions-item label="职务">{{ activeUser.intro1_post || '未填写' }}</el-descriptions-item>
+          <el-descriptions-item label="联系电话" :span="2">{{ activeUser.intro1_phone || '未填写' }}</el-descriptions-item>
+          <el-descriptions-item label="介绍人(2)姓名">{{ activeUser.intro2_name || '未填写' }}</el-descriptions-item>
+          <el-descriptions-item label="职务">{{ activeUser.intro2_post || '未填写' }}</el-descriptions-item>
+          <el-descriptions-item label="联系电话" :span="2">{{ activeUser.intro2_phone || '未填写' }}</el-descriptions-item>
+        </el-descriptions>
+
+        <!-- 8. 预备党员的教育考察和转正[cite: 3] -->
+        <el-descriptions title="八、 预备党员的教育考察和转正" :column="2" border size="small" class="record-section" style="margin-bottom: 30px;">
+          <el-descriptions-item label="转正申请时间">{{ activeUser.regular_apply_time || '未填写' }}</el-descriptions-item>
+          <el-descriptions-item label="征求群众意见座谈时间">{{ activeUser.regular_mass_meeting_time || '未填写' }}</el-descriptions-item>
+          <el-descriptions-item label="转正公示时间">{{ activeUser.regular_public_time || '未填写' }}</el-descriptions-item>
+          <el-descriptions-item label="公示情况">{{ activeUser.regular_public_desc || '未填写' }}</el-descriptions-item>
+          <el-descriptions-item label="支部大会讨论时间">{{ activeUser.join_party_date || '未填写' }}</el-descriptions-item>
+          <el-descriptions-item label="表决情况">{{ activeUser.regular_vote_desc || '未填写' }}</el-descriptions-item>
+          <el-descriptions-item label="审批时间">{{ activeUser.regular_approve_time || '未填写' }}</el-descriptions-item>
+          <el-descriptions-item label="上级党委审批意见">{{ activeUser.regular_approve_opinion || '未填写' }}</el-descriptions-item>
+        </el-descriptions>
+
       </div>
     </el-drawer>
   </div>
@@ -326,15 +412,39 @@ onMounted(() => {
 .table-box { border-radius: 8px; }
 .pagination-container { margin-top: 20px; display: flex; justify-content: flex-end; }
 
-/* 名片抽屉样式优化 */
-.drawer-content { padding: 0 10px; }
+/* 党员详细档案抽屉样式 */
+.drawer-content { 
+  padding: 0 15px; 
+  height: 100%; 
+  overflow-y: auto; 
+}
 .user-avatar-box { 
   text-align: center; 
-  margin-bottom: 30px; 
-  padding-bottom: 20px; 
-  border-bottom: 1px dashed #eee; 
+  margin-bottom: 25px; 
+  padding-bottom: 15px; 
+  border-bottom: 2px solid #ce1126; 
 }
-.user-avatar-box h3 { margin: 15px 0 10px; font-size: 20px; color: #333; }
-.user-desc { margin-top: 20px; }
-:deep(.el-descriptions__label) { width: 100px; color: #666; background-color: #fafafa !important;}
+.user-avatar-box h3 { 
+  margin: 15px 0 5px; 
+  font-size: 22px; 
+  color: #333; 
+}
+.record-section {
+  margin-bottom: 25px;
+}
+/* 调整标题样式使其更醒目 */
+:deep(.el-descriptions__title) {
+  font-size: 16px;
+  color: #ce1126;
+  border-left: 4px solid #ce1126;
+  padding-left: 8px;
+  margin-bottom: 10px;
+}
+/* 调整左侧 Label 背景色和宽度 */
+:deep(.el-descriptions__label) { 
+  width: 140px; 
+  color: #606266; 
+  background-color: #fafafa !important;
+  font-weight: bold;
+}
 </style>

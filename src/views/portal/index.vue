@@ -14,7 +14,7 @@
       <el-row :gutter="40" class="section-row">
         <el-col :span="14">
           <div class="section-title">
-            <h2>📰 今日时政</h2>
+            <h2> 今日时政</h2>
             <span class="more" @click="$router.push('/portal/news')">查看更多 ></span>
           </div>
           <div class="news-list" v-loading="loadingNews">
@@ -33,7 +33,7 @@
 
         <el-col :span="10">
           <div class="section-title">
-            <h2>📚 学习园地</h2>
+            <h2> 学习园地</h2>
             <span class="more" @click="$router.push('/portal/learning')">查看更多 ></span>
           </div>
           <div class="news-list" v-loading="loadingLearning">
@@ -53,7 +53,7 @@
 
       <div class="section-row">
         <div class="section-title">
-          <h2>📸 党员风采</h2>
+          <h2> 党员风采</h2>
           <span class="more" @click="$router.push('/portal/showcase')">查看更多 ></span>
         </div>
         <el-row :gutter="20" v-loading="loadingShowcase">
@@ -72,7 +72,7 @@
 
       <div class="section-row">
         <div class="section-title">
-          <h2>🤝 实践中心</h2>
+          <h2> 实践中心</h2>
           <span class="more" @click="$router.push('/portal/practice')">查看更多 ></span>
         </div>
         <el-row :gutter="20" v-loading="loadingPractice">

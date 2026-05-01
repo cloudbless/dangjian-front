@@ -91,10 +91,11 @@ export function getDashboardStats() {
 // src/api/system.ts
 
 // 10. 获取我的支部概况信息
-export function getMyBranchInfo() {
+export function getMyBranchInfo(p0: { org_id: string }) {
   return request({
     url: 'system/my_branch/',
-    method: 'get'
+    method: 'get',
+    params: p0  // 加上这一行，把 org_id 正确传给后端
   })
 }
 
@@ -107,4 +108,16 @@ export function getPointsLogList(params?: any) {
     method: 'get',
     params
   })
+}
+export function updateUserRecord(id: number, data: any) {
+  return request({
+    url: `/system/users/${id}/update_record/`, 
+    method: 'put',
+    data
+  })
+}
+
+// 顺便确保你有获取单个用户详情的接口，比如：
+export function getUserDetail(id: number) {
+  return request({ url: `/system/users/${id}/`, method: 'get' })
 }

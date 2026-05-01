@@ -198,9 +198,10 @@ const requiredTasksFinished = ref<any[]>([]);
 const taskTotal = ref(0);
 
 const roleMap: any = {
-  super_admin: "党总支管理员",
-  branch_admin: "支部书记",
+  super_admin: "党委书记",
+  branch_admin: "党支部书记",
   member: "正式党员",
+  probationary_member: '预备党员',
 };
 
 // 统一的学习跳转逻辑

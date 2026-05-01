@@ -2,7 +2,7 @@
   <div class="app-container">
     <el-card class="box-card">
       <div class="header-actions">
-        <el-button type="primary" @click="handleAddRoot">➕ 新增一级党委</el-button>
+        <el-button type="primary" @click="handleAddRoot">➕ 新增基层党委</el-button>
         <el-button type="default" @click="getList">🔄 刷新</el-button>
       </div>
 
@@ -18,7 +18,7 @@
         <el-table-column prop="name" label="组织名称" min-width="200">
           <template #default="scope">
             <span v-if="scope.row.level === 1">🚩 </span>
-            <span v-else>📂 </span>
+            <span v-else>🚩 </span>
             {{ scope.row.name }}
           </template>
         </el-table-column>
@@ -27,8 +27,8 @@
         
         <el-table-column label="层级" width="100" align="center">
           <template #default="scope">
-            <el-tag v-if="scope.row.level === 1" type="danger">一级党委</el-tag>
-            <el-tag v-else-if="scope.row.level === 2" type="warning">党总支</el-tag>
+            <el-tag v-if="scope.row.level === 1" type="danger">基层党委</el-tag>
+            <el-tag v-else-if="scope.row.level === 2" type="warning">党支部</el-tag>
             <el-tag v-else type="success">党支部</el-tag>
           </template>
         </el-table-column>

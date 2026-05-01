@@ -142,6 +142,13 @@ const routes: Array<RouteRecordRaw> = [
         component: () => import("../views/system/user/index.vue"),
         meta: { title: "党员管理" },
       },
+      // 👇 新增：党员发展纪实档案专属独立编辑页
+      {
+        path: "system/users/record/:id",
+        name: "UserRecordEdit",
+        component: () => import("../views/system/user/RecordEdit.vue"),
+        meta: { title: "编辑纪实档案", hidden: true }, // hidden 防止它在左侧菜单生成多余的按钮
+      },
       {
         path: "system/orgs",
         name: "OrgList",

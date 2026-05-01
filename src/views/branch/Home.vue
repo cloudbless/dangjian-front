@@ -1,7 +1,6 @@
 <template>
   <div class="branch-home-container">
     <el-row :gutter="20">
-      
       <el-col :span="8">
         <el-card class="org-card" shadow="hover" v-loading="loadingOrg">
           <template #header>
@@ -9,14 +8,21 @@
               <span>🚩 支部组织架构</span>
             </div>
           </template>
-          
+
           <div class="org-content">
             <h2 class="org-name">{{ orgInfo.org_name }}</h2>
-            <p class="org-desc">{{ orgInfo.description || '深入学习贯彻党的方针政策，发挥基层党组织战斗堡垒作用。' }}</p>
-            
+            <p class="org-desc">
+              {{
+                orgInfo.description ||
+                "深入学习贯彻党的方针政策，发挥基层党组织战斗堡垒作用。"
+              }}
+            </p>
+
             <div class="org-stats">
               <div class="stat-item">
-                <div class="stat-value">{{ orgInfo.total_members }} <span class="unit">名</span></div>
+                <div class="stat-value">
+                  {{ orgInfo.total_members }} <span class="unit">名</span>
+                </div>
                 <div class="stat-label">支部党员总数</div>
               </div>
             </div>
@@ -26,17 +32,21 @@
             <div class="committee-box">
               <h3>👨‍💼 支部委员会</h3>
               <div v-if="orgInfo.admins && orgInfo.admins.length > 0">
-                <el-tag 
-                  v-for="(name, index) in orgInfo.admins" 
-                  :key="index" 
-                  class="admin-tag" 
-                  type="danger" 
+                <el-tag
+                  v-for="(name, index) in orgInfo.admins"
+                  :key="index"
+                  class="admin-tag"
+                  type="danger"
                   effect="light"
                 >
-                  {{ index === 0 ? '书记' : '委员' }}：{{ name }}
+                  {{ index === 0 ? "书记" : "委员" }}：{{ name }}
                 </el-tag>
               </div>
-              <el-empty v-else description="暂未设置支部管理员" :image-size="60" />
+              <el-empty
+                v-else
+                description="暂未设置支部管理员"
+                :image-size="60"
+              />
             </div>
           </div>
         </el-card>
@@ -45,50 +55,67 @@
       <el-col :span="16">
         <el-card shadow="hover" class="news-card">
           <el-tabs v-model="activeTab" class="branch-tabs">
-            
             <el-tab-pane label="📸 支部动态" name="dynamics">
               <div v-loading="loadingNews" class="article-list">
-                <div 
-                  v-for="item in dynamicsList" 
-                  :key="item.id" 
+                <div
+                  v-for="item in dynamicsList"
+                  :key="item.id"
                   class="article-item"
                   @click="goToDetail(item.id)"
                 >
-                  <el-image v-if="item.cover" :src="item.cover" class="article-cover" fit="cover" />
+                  <el-image
+                    v-if="item.cover"
+                    :src="item.cover"
+                    class="article-cover"
+                    fit="cover"
+                  />
                   <div class="article-info">
                     <h4 class="article-title">{{ item.title }}</h4>
-                    <p class="article-summary">{{ item.summary || '点击查看动态详情...' }}</p>
+                    <p class="article-summary">
+                      {{ item.summary || "点击查看动态详情..." }}
+                    </p>
                     <div class="article-meta">
                       <span>发布人: {{ item.author_name }}</span>
-                      <span>{{ new Date(item.created_at).toLocaleString() }}</span>
+                      <span>{{
+                        new Date(item.created_at).toLocaleString()
+                      }}</span>
                     </div>
                   </div>
                 </div>
-                <el-empty v-if="dynamicsList.length === 0" description="本支部暂无动态" />
+                <el-empty
+                  v-if="dynamicsList.length === 0"
+                  description="本支部暂无动态"
+                />
               </div>
             </el-tab-pane>
 
             <el-tab-pane label="📢 支部通知" name="notices">
               <div v-loading="loadingNews" class="article-list">
-                <div 
-                  v-for="item in noticeList" 
-                  :key="item.id" 
+                <div
+                  v-for="item in noticeList"
+                  :key="item.id"
                   class="article-item notice-item"
                   @click="goToDetail(item.id)"
                 >
-                  <div class="notice-icon"><el-icon><BellFilled /></el-icon></div>
+                  <div class="notice-icon">
+                    <el-icon><BellFilled /></el-icon>
+                  </div>
                   <div class="article-info">
                     <h4 class="article-title">{{ item.title }}</h4>
-                    <div class="article-meta" style="margin-top: 8px;">
+                    <div class="article-meta" style="margin-top: 8px">
                       <span>发布人: {{ item.author_name }}</span>
-                      <span>{{ new Date(item.created_at).toLocaleString() }}</span>
+                      <span>{{
+                        new Date(item.created_at).toLocaleString()
+                      }}</span>
                     </div>
                   </div>
                 </div>
-                <el-empty v-if="noticeList.length === 0" description="本支部暂无通知" />
+                <el-empty
+                  v-if="noticeList.length === 0"
+                  description="本支部暂无通知"
+                />
               </div>
             </el-tab-pane>
-
           </el-tabs>
         </el-card>
       </el-col>
@@ -97,63 +124,83 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
-import { getMyBranchInfo } from '../../api/system'
-import { getArticleList } from '../../api/content'
-import { BellFilled } from '@element-plus/icons-vue'
+import { ref, onMounted } from "vue";
+import { useRouter } from "vue-router";
+import { getMyBranchInfo } from "../../api/system";
+import { getArticleList } from "../../api/content";
+import { BellFilled } from "@element-plus/icons-vue";
 
-const router = useRouter()
-const activeTab = ref('dynamics')
+const router = useRouter();
+const activeTab = ref("dynamics");
 
 // 数据状态
-const loadingOrg = ref(false)
-const orgInfo = ref<any>({})
+const loadingOrg = ref(false);
+const orgInfo = ref<any>({});
 
-const loadingNews = ref(false)
-const dynamicsList = ref<any[]>([])
-const noticeList = ref<any[]>([])
+const loadingNews = ref(false);
+const dynamicsList = ref<any[]>([]);
+const noticeList = ref<any[]>([]);
 
 // 1. 获取支部基本信息与架构
+// 1. 获取支部基本信息与架构
+
 const fetchOrgInfo = async () => {
-  loadingOrg.value = true
+  loadingOrg.value = true;
   try {
-    const res = await getMyBranchInfo()
-    orgInfo.value = res
+    // 从本地存储获取当前是否处于视察模式
+    const viewingId = localStorage.getItem('viewingOrgId');
+    
+    // 调用接口时，显式传递 org_id 参数
+    // 这样后端 my_branch_info 就能识别并返回视察支部的真实数据
+    const res: any = await getMyBranchInfo({ 
+      org_id: viewingId || '' 
+    });
+    
+    orgInfo.value = res;
   } catch (error) {
-    console.error('获取支部信息失败', error)
+    console.error('获取支部信息失败', error);
   } finally {
-    loadingOrg.value = false
+    loadingOrg.value = false;
   }
 }
 
 // 2. 获取本支部发布的动态和通知 (关键：带上 scope: 'branch')
 const fetchArticles = async () => {
-  loadingNews.value = true
+  loadingNews.value = true;
   try {
     // 拉取支部动态 (类型 4)
-    const resDyn: any = await getArticleList({ article_type: 4, scope: 'branch', page: 1, size: 5 })
-    dynamicsList.value = resDyn.results || resDyn || []
+    const resDyn: any = await getArticleList({
+      article_type: 4,
+      scope: "branch",
+      page: 1,
+      size: 5,
+    });
+    dynamicsList.value = resDyn.results || resDyn || [];
 
     // 拉取通知公告 (类型 2)
-    const resNot: any = await getArticleList({ article_type: 2, scope: 'branch', page: 1, size: 5 })
-    noticeList.value = resNot.results || resNot || []
+    const resNot: any = await getArticleList({
+      article_type: 2,
+      scope: "branch",
+      page: 1,
+      size: 5,
+    });
+    noticeList.value = resNot.results || resNot || [];
   } catch (error) {
-    console.error('获取支部内容失败', error)
+    console.error("获取支部内容失败", error);
   } finally {
-    loadingNews.value = false
+    loadingNews.value = false;
   }
-}
+};
 
 const goToDetail = (id: number) => {
   // 复用门户端详情页组件即可展示文章内容
-  router.push(`/portal/article/${id}`)
-}
+  router.push(`/portal/article/${id}`);
+};
 
 onMounted(() => {
-  fetchOrgInfo()
-  fetchArticles()
-})
+  fetchOrgInfo();
+  fetchArticles();
+});
 </script>
 
 <style scoped>
@@ -161,52 +208,148 @@ onMounted(() => {
   padding-top: 10px;
 }
 
-.card-header { font-weight: bold; font-size: 18px; color: #333; } /* 16px -> 18px */
+.card-header {
+  font-weight: bold;
+  font-size: 18px;
+  color: #333;
+} /* 16px -> 18px */
 
 /* 组织架构卡片样式 */
-.org-card { height: 100%; min-height: 500px; }
-.org-name { color: #ce1126; margin-top: 10px; margin-bottom: 10px; font-size: 26px; } /* 22px -> 26px */
-.org-desc { color: #666; font-size: 16px; line-height: 1.6; margin-bottom: 30px; } /* 14px -> 16px */
+.org-card {
+  height: 100%;
+  min-height: 500px;
+}
+.org-name {
+  color: #ce1126;
+  margin-top: 10px;
+  margin-bottom: 10px;
+  font-size: 26px;
+} /* 22px -> 26px */
+.org-desc {
+  color: #666;
+  font-size: 16px;
+  line-height: 1.6;
+  margin-bottom: 30px;
+} /* 14px -> 16px */
 
-.org-stats { background: #fff9f9; padding: 20px; border-radius: 8px; text-align: center; border: 1px solid #ffe6e6; }
-.stat-value { font-size: 38px; font-weight: bold; color: #ce1126; } /* 32px -> 38px */
-.stat-value .unit { font-size: 16px; font-weight: normal; } /* 14px -> 16px */
-.stat-label { font-size: 15px; color: #999; margin-top: 5px; } /* 13px -> 15px */
+.org-stats {
+  background: #fff9f9;
+  padding: 20px;
+  border-radius: 8px;
+  text-align: center;
+  border: 1px solid #ffe6e6;
+}
+.stat-value {
+  font-size: 38px;
+  font-weight: bold;
+  color: #ce1126;
+} /* 32px -> 38px */
+.stat-value .unit {
+  font-size: 16px;
+  font-weight: normal;
+} /* 14px -> 16px */
+.stat-label {
+  font-size: 15px;
+  color: #999;
+  margin-top: 5px;
+} /* 13px -> 15px */
 
-.committee-box h3 { font-size: 18px; color: #333; margin-bottom: 15px; } /* 16px -> 18px */
-.admin-tag { margin-right: 10px; margin-bottom: 10px; font-size: 15px; padding: 18px 14px; } /* 14px -> 15px */
+.committee-box h3 {
+  font-size: 18px;
+  color: #333;
+  margin-bottom: 15px;
+} /* 16px -> 18px */
+.admin-tag {
+  margin-right: 10px;
+  margin-bottom: 10px;
+  font-size: 15px;
+  padding: 18px 14px;
+} /* 14px -> 15px */
 
 /* 文章列表样式 */
-.news-card { min-height: 500px; }
-.branch-tabs :deep(.el-tabs__item) { font-size: 16px; } /* ElementPlus Tab字体变大 */
-.branch-tabs :deep(.el-tabs__item.is-active) { color: #ce1126; font-weight: bold; }
-.branch-tabs :deep(.el-tabs__active-bar) { background-color: #ce1126; }
+.news-card {
+  min-height: 500px;
+}
+.branch-tabs :deep(.el-tabs__item) {
+  font-size: 16px;
+} /* ElementPlus Tab字体变大 */
+.branch-tabs :deep(.el-tabs__item.is-active) {
+  color: #ce1126;
+  font-weight: bold;
+}
+.branch-tabs :deep(.el-tabs__active-bar) {
+  background-color: #ce1126;
+}
 
-.article-list { padding: 10px 0; }
-.article-item { 
-  display: flex; 
-  padding: 18px 15px; 
-  border-bottom: 1px solid #f0f0f0; 
-  cursor: pointer; 
+.article-list {
+  padding: 10px 0;
+}
+.article-item {
+  display: flex;
+  padding: 18px 15px;
+  border-bottom: 1px solid #f0f0f0;
+  cursor: pointer;
   transition: all 0.3s;
   border-radius: 6px;
 }
-.article-item:hover { background-color: #fafafa; transform: translateX(5px); }
-.article-item:last-child { border-bottom: none; }
+.article-item:hover {
+  background-color: #fafafa;
+  transform: translateX(5px);
+}
+.article-item:last-child {
+  border-bottom: none;
+}
 
-.article-cover { width: 140px; height: 90px; border-radius: 4px; margin-right: 15px; flex-shrink: 0; }
-.article-info { flex: 1; display: flex; flex-direction: column; justify-content: center; }
-.article-title { margin: 0 0 8px 0; font-size: 18px; font-weight: bold; color: #333; } /* 16px -> 18px */
-.article-summary { font-size: 15px; color: #666; margin: 0 0 8px 0; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.5; } /* 13px -> 15px */
-.article-meta { display: flex; justify-content: space-between; font-size: 14px; color: #999; } /* 12px -> 14px */
+.article-cover {
+  width: 140px;
+  height: 90px;
+  border-radius: 4px;
+  margin-right: 15px;
+  flex-shrink: 0;
+}
+.article-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.article-title {
+  margin: 0 0 8px 0;
+  font-size: 18px;
+  font-weight: bold;
+  color: #333;
+} /* 16px -> 18px */
+.article-summary {
+  font-size: 15px;
+  color: #666;
+  margin: 0 0 8px 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  line-height: 1.5;
+} /* 13px -> 15px */
+.article-meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+  color: #999;
+} /* 12px -> 14px */
 
 /* 通知专属样式 */
-.notice-item { align-items: center; }
-.notice-icon { 
-  width: 45px; height: 45px; 
-  background-color: #fff1f0; color: #ce1126; 
-  border-radius: 50%; 
-  display: flex; justify-content: center; align-items: center; 
-  font-size: 22px; margin-right: 15px; 
+.notice-item {
+  align-items: center;
+}
+.notice-icon {
+  width: 45px;
+  height: 45px;
+  background-color: #fff1f0;
+  color: #ce1126;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 22px;
+  margin-right: 15px;
 }
 </style>
