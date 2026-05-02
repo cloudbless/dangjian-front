@@ -89,7 +89,10 @@
               <el-col :span="12"><el-form-item label="上级审批时间"><el-date-picker v-model="form.probation_approve_time" type="date" value-format="YYYY-MM-DD" style="width:100%" /></el-form-item></el-col>
               <el-col :span="12"><el-form-item label="谈话人"><el-input v-model="form.probation_talker" /></el-form-item></el-col>
             </el-row>
+            <el-form-item label="培训情况"><el-input type="textarea" v-model="form.probation_train_desc" rows="2" /></el-form-item>
+            <el-form-item label="公示情况"><el-input type="textarea" v-model="form.probation_public_desc" rows="2" /></el-form-item>
             <el-form-item label="表决情况"><el-input type="textarea" v-model="form.probation_vote_desc" rows="2" /></el-form-item>
+            <el-form-item label="上级党委审批意见"><el-input type="textarea" v-model="form.probation_approve_opinion" rows="2" /></el-form-item>
 
             <el-divider content-position="left">入党介绍人信息</el-divider>
             <el-row :gutter="40">
@@ -113,6 +116,7 @@
               <el-col :span="12"><el-form-item label="支部大会讨论时间"><el-date-picker v-model="form.regular_meeting_time" type="date" value-format="YYYY-MM-DD" style="width:100%" /></el-form-item></el-col>
               <el-col :span="12"><el-form-item label="上级审批时间"><el-date-picker v-model="form.regular_approve_time" type="date" value-format="YYYY-MM-DD" style="width:100%" /></el-form-item></el-col>
             </el-row>
+            <el-form-item label="公示情况"><el-input type="textarea" v-model="form.regular_public_desc" rows="2" /></el-form-item>
             <el-form-item label="表决情况"><el-input type="textarea" v-model="form.regular_vote_desc" rows="2" /></el-form-item>
             <el-form-item label="上级审批意见"><el-input type="textarea" v-model="form.regular_approve_opinion" rows="2" /></el-form-item>
           </el-form>

@@ -11,19 +11,16 @@
             <span style="font-size: 14px; margin-right: 10px; color: #666"
               >选择查看支部:</span
             >
-            <el-select
+            <el-tree-select
               v-model="selectedOrgId"
-              placeholder="全部支部"
+              :data="orgList"
+              :props="{ label: 'name', value: 'id', children: 'children' }"
+              node-key="id"
+              placeholder="请选择组织"
               clearable
+              check-strictly
               @change="fetchStats"
-            >
-              <el-option
-                v-for="org in orgList"
-                :key="org.id"
-                :label="org.name"
-                :value="org.id"
-              />
-            </el-select>
+            />
           </div>
         </div>
       </template>

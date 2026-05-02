@@ -205,7 +205,7 @@
           <el-descriptions-item label="表决情况">{{ activeUser.activist_vote_desc || '未填写' }}</el-descriptions-item>
           <el-descriptions-item label="公示时间">{{ activeUser.activist_public_time || '未填写' }}</el-descriptions-item>
           <el-descriptions-item label="公示情况">{{ activeUser.activist_public_desc || '未填写' }}</el-descriptions-item>
-          <el-descriptions-item label="审批时间">{{ activeUser.activist_approve_time || '未填写' }}</el-descriptions-item>
+          <el-descriptions-item label="上级党委审批时间">{{ activeUser.activist_approve_time || '未填写' }}</el-descriptions-item>
           <el-descriptions-item label="上级党委审批意见">{{ activeUser.activist_approve_opinion || '未填写' }}</el-descriptions-item>
         </el-descriptions>
 
@@ -219,12 +219,12 @@
 
         <!-- 5. 发展对象的确定和考察[cite: 3] -->
         <el-descriptions title="五、 发展对象的确定和考察" :column="2" border size="small" class="record-section">
-          <el-descriptions-item label="征求群众意见座谈会时间" :span="2">{{ activeUser.target_mass_meeting_time || '未填写' }}</el-descriptions-item>
-          <el-descriptions-item label="支委会/大会讨论时间" :span="2">{{ activeUser.confirm_target_meeting_time || '未填写' }}</el-descriptions-item>
+          <el-descriptions-item label="入党征求党内外群众意见座谈会时间" :span="2">{{ activeUser.target_mass_meeting_time || '未填写' }}</el-descriptions-item>
+          <el-descriptions-item label="支委会/支部大会讨论确定为发展对象会议时间" :span="2">{{ activeUser.confirm_target_meeting_time || '未填写' }}</el-descriptions-item>
           <el-descriptions-item label="公示时间">{{ activeUser.target_public_time || '未填写' }}</el-descriptions-item>
           <el-descriptions-item label="公示情况">{{ activeUser.target_public_desc || '未填写' }}</el-descriptions-item>
-          <el-descriptions-item label="审批时间">{{ activeUser.target_approve_time || '未填写' }}</el-descriptions-item>
-          <el-descriptions-item label="上级审批意见">{{ activeUser.target_approve_opinion || '未填写' }}</el-descriptions-item>
+          <el-descriptions-item label="上级党委审批时间">{{ activeUser.target_approve_time || '未填写' }}</el-descriptions-item>
+          <el-descriptions-item label="上级党委审批意见">{{ activeUser.target_approve_opinion || '未填写' }}</el-descriptions-item>
           <el-descriptions-item label="发展对象培训时间">{{ activeUser.target_train_time || '未填写' }}</el-descriptions-item>
           <el-descriptions-item label="政审情况">{{ activeUser.target_pol_check || '未填写' }}</el-descriptions-item>
         </el-descriptions>
@@ -233,14 +233,14 @@
         <el-descriptions title="六、 预备党员的接收" :column="2" border size="small" class="record-section">
           <el-descriptions-item label="上级党委预审时间">{{ activeUser.probation_pre_check_time || '未填写' }}</el-descriptions-item>
           <el-descriptions-item label="培训情况">{{ activeUser.probation_train_desc || '未填写' }}</el-descriptions-item>
-          <el-descriptions-item label="拟接收公示时间">{{ activeUser.probation_public_time || '未填写' }}</el-descriptions-item>
+          <el-descriptions-item label="拟接收为预备党员公示时间">{{ activeUser.probation_public_time || '未填写' }}</el-descriptions-item>
           <el-descriptions-item label="公示情况">{{ activeUser.probation_public_desc || '未填写' }}</el-descriptions-item>
-          <el-descriptions-item label="大会讨论接收时间">{{ activeUser.probation_meeting_time || '未填写' }}</el-descriptions-item>
+          <el-descriptions-item label="支部大会讨论接收为预备党员时间">{{ activeUser.probation_meeting_time || '未填写' }}</el-descriptions-item>
           <el-descriptions-item label="表决情况">{{ activeUser.probation_vote_desc || '未填写' }}</el-descriptions-item>
-          <el-descriptions-item label="上级派人谈话时间">{{ activeUser.probation_talk_time || '未填写' }}</el-descriptions-item>
+          <el-descriptions-item label="上级党委派人谈话时间">{{ activeUser.probation_talk_time || '未填写' }}</el-descriptions-item>
           <el-descriptions-item label="谈话人">{{ activeUser.probation_talker || '未填写' }}</el-descriptions-item>
-          <el-descriptions-item label="审批时间">{{ activeUser.probation_approve_time || '未填写' }}</el-descriptions-item>
-          <el-descriptions-item label="上级审批意见">{{ activeUser.probation_approve_opinion || '未填写' }}</el-descriptions-item>
+          <el-descriptions-item label="上级党委审批时间">{{ activeUser.probation_approve_time || '未填写' }}</el-descriptions-item>
+          <el-descriptions-item label="上级党委审批意见">{{ activeUser.probation_approve_opinion || '未填写' }}</el-descriptions-item>
         </el-descriptions>
 
         <!-- 7. 入党介绍人[cite: 3] -->
@@ -256,10 +256,10 @@
         <!-- 8. 预备党员的教育考察和转正[cite: 3] -->
         <el-descriptions title="八、 预备党员的教育考察和转正" :column="2" border size="small" class="record-section" style="margin-bottom: 30px;">
           <el-descriptions-item label="转正申请时间">{{ activeUser.regular_apply_time || '未填写' }}</el-descriptions-item>
-          <el-descriptions-item label="征求群众意见座谈时间">{{ activeUser.regular_mass_meeting_time || '未填写' }}</el-descriptions-item>
-          <el-descriptions-item label="转正公示时间">{{ activeUser.regular_public_time || '未填写' }}</el-descriptions-item>
+          <el-descriptions-item label="转正征求党内外群众意见座谈时间">{{ activeUser.regular_mass_meeting_time || '未填写' }}</el-descriptions-item>
+          <el-descriptions-item label="预备党员转正公示时间">{{ activeUser.regular_public_time || '未填写' }}</el-descriptions-item>
           <el-descriptions-item label="公示情况">{{ activeUser.regular_public_desc || '未填写' }}</el-descriptions-item>
-          <el-descriptions-item label="支部大会讨论时间">{{ activeUser.join_party_date || '未填写' }}</el-descriptions-item>
+          <el-descriptions-item label="支部大会讨论转为正式党员时间">{{ activeUser.join_party_date || '未填写' }}</el-descriptions-item>
           <el-descriptions-item label="表决情况">{{ activeUser.regular_vote_desc || '未填写' }}</el-descriptions-item>
           <el-descriptions-item label="审批时间">{{ activeUser.regular_approve_time || '未填写' }}</el-descriptions-item>
           <el-descriptions-item label="上级党委审批意见">{{ activeUser.regular_approve_opinion || '未填写' }}</el-descriptions-item>

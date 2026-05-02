@@ -16,7 +16,7 @@
             👀 <span class="tag-text">超管视察中</span>
           </el-tag>
 
-          <span class="sys-name">党员学习端</span>
+          <span class="sys-name">党员服务端</span>
         </div>
 
         <div class="nav-menu">

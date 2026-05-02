@@ -37,7 +37,7 @@
             <template #dropdown>
               <el-dropdown-menu>
                 <el-dropdown-item @click="$router.push('/branch/home')">
-                  📱 进入支部端
+                  📱 进入服务端
                 </el-dropdown-item>
 
                 <el-dropdown-item

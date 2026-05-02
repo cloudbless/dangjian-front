@@ -1,8 +1,40 @@
 <template>
   <div class="app-container">
     <el-card>
-      <div class="header-actions">
-        <el-button type="primary" @click="handleCreate">✍️ 发布文章</el-button>
+      <div class="header-box">
+        <el-form :inline="true" :model="queryParams" class="search-form">
+          <el-form-item label="文章标题">
+            <el-input
+              v-model="queryParams.title"
+              placeholder="请输入标题关键字"
+              clearable
+              @keyup.enter="handleQuery"
+            />
+          </el-form-item>
+          <el-form-item label="文章类型">
+            <el-select
+              v-model="queryParams.article_type"
+              placeholder="全部分类"
+              clearable
+              style="width: 150px"
+            >
+              <el-option label="今日时政" :value="1" />
+              <el-option label="通知公告" :value="2" />
+              <el-option label="党员风采" :value="3" />
+              <el-option label="支部动态" :value="4" />
+              <el-option label="学习园地" :value="5" />
+              <el-option label="实践中心" :value="6" />
+            </el-select>
+          </el-form-item>
+          <el-form-item>
+            <el-button type="primary" @click="handleQuery">搜索</el-button>
+            <el-button @click="resetQuery">重置</el-button>
+          </el-form-item>
+        </el-form>
+
+        <div class="action-btn">
+          <el-button type="success" @click="handleCreate">新增文章</el-button>
+        </div>
       </div>
 
       <el-table
@@ -27,7 +59,19 @@
             <el-tag v-else-if="row.article_type === 3" type="success"
               >党员风采</el-tag
             >
-            <el-tag v-else type="info">支部动态</el-tag>
+            <el-tag v-else-if="row.article_type === 4" type="info"
+              >支部动态</el-tag
+            >
+            <el-tag v-else-if="row.article_type === 5" type="danger"
+              >学习园地</el-tag
+            >
+            <el-tag
+              v-else-if="row.article_type === 6"
+              color="#626aef"
+              style="color: white"
+              >实践中心</el-tag
+            >
+            <el-tag v-else>未知类型</el-tag>
           </template>
         </el-table-column>
         <el-table-column prop="author_name" label="发布人" width="120" />
@@ -215,6 +259,8 @@ const queryParams = reactive({
   page: 1,
   pageSize: 10,
   total: 0,
+  title: "", // 👈 新增标题搜索
+  article_type: undefined, // 👈 新增分类筛选
 });
 
 const form = reactive({
@@ -231,12 +277,26 @@ const getList = async () => {
   const res: any = await getArticleList({
     page: queryParams.page,
     page_size: queryParams.pageSize,
+    title: queryParams.title, // 👈 新增传参
+    article_type: queryParams.article_type, // 👈 新增传参
   });
   list.value = res.results || res;
   queryParams.total = res.count || 0;
   loading.value = false;
 };
 
+// 3. 增加点击搜索和重置的方法 (加在 getList 下面即可)
+const handleQuery = () => {
+  queryParams.page = 1;
+  getList();
+};
+
+const resetQuery = () => {
+  queryParams.title = "";
+  queryParams.article_type = undefined;
+  queryParams.page = 1;
+  getList();
+};
 // ✨ 修复处 3：处理分页器翻页事件
 const handlePageChange = (val: number) => {
   queryParams.page = val;
@@ -357,5 +417,17 @@ onMounted(() => {
   color: #999;
   margin-top: 5px;
   line-height: 1.4;
+}
+.header-box {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 20px;
+}
+.search-form {
+  flex: 1;
+}
+.action-btn {
+  margin-left: 20px;
 }
 </style>

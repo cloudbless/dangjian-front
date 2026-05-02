@@ -48,6 +48,17 @@
               <div class="points-title">我的累计积分</div>
               <div class="points-number">{{ userInfo.total_points || 0 }}</div>
             </div>
+            
+            <!-- 👇 新增：查看档案按钮 -->
+            <el-button 
+              type="danger" 
+              plain 
+              style="width: 100%; margin-top: 15px;" 
+              @click="recordVisible = true"
+            >
+              <el-icon style="margin-right: 5px;"><Document /></el-icon>
+              查看我的纪实档案
+            </el-button>
           </div>
         </el-card>
       </el-col>
@@ -164,6 +175,97 @@
         </el-card>
       </el-col>
     </el-row>
+
+    <!-- 👇 新增：纪实档案抽屉组件 -->
+    <el-drawer v-model="recordVisible" title="我的党员发展纪实档案" direction="rtl" size="55%">
+      <div v-if="userInfo" class="drawer-content">
+        <!-- 1. 基础信息 -->
+        <el-descriptions title="一、 基础信息" :column="2" border size="small" class="record-section">
+          <el-descriptions-item label="真实姓名">{{ userInfo.real_name || userInfo.username }}</el-descriptions-item>
+          <el-descriptions-item label="性别">{{ userInfo.gender === 1 ? '男' : (userInfo.gender === 2 ? '女' : '未知') }}</el-descriptions-item>
+          <el-descriptions-item label="民族">{{ userInfo.nation || '未填写' }}</el-descriptions-item>
+          <el-descriptions-item label="籍贯">{{ userInfo.native_place || '未填写' }}</el-descriptions-item>
+          <el-descriptions-item label="班级/部门">{{ userInfo.class_name || '未填写' }}</el-descriptions-item>
+          <el-descriptions-item label="联系电话">{{ userInfo.phone || '未填写' }}</el-descriptions-item>
+          <el-descriptions-item label="身份证号" :span="2">{{ userInfo.identity_card || '未填写' }}</el-descriptions-item>
+        </el-descriptions>
+
+        <!-- 2. 申请入党 -->
+        <el-descriptions title="二、 申请入党" :column="2" border size="small" class="record-section">
+          <el-descriptions-item label="递交申请书时间" :span="2">{{ userInfo.app_submit_time || '未填写' }}</el-descriptions-item>
+          <el-descriptions-item label="派人谈话时间">{{ userInfo.app_talk_time || '未填写' }}</el-descriptions-item>
+          <el-descriptions-item label="谈话人">{{ userInfo.app_talker || '未填写' }}</el-descriptions-item>
+        </el-descriptions>
+
+        <!-- 3. 积极分子 -->
+        <el-descriptions title="三、 入党积极分子的确定和培养教育" :column="2" border size="small" class="record-section">
+          <el-descriptions-item label="推荐时间">{{ userInfo.activist_recommend_time || '未填写' }}</el-descriptions-item>
+          <el-descriptions-item label="推荐情况">{{ userInfo.activist_recommend_desc || '未填写' }}</el-descriptions-item>
+          <el-descriptions-item label="确定时间">{{ userInfo.activist_confirm_time || '未填写' }}</el-descriptions-item>
+          <el-descriptions-item label="表决情况">{{ userInfo.activist_vote_desc || '未填写' }}</el-descriptions-item>
+          <el-descriptions-item label="公示时间">{{ userInfo.activist_public_time || '未填写' }}</el-descriptions-item>
+          <el-descriptions-item label="公示情况">{{ userInfo.activist_public_desc || '未填写' }}</el-descriptions-item>
+          <el-descriptions-item label="审批时间">{{ userInfo.activist_approve_time || '未填写' }}</el-descriptions-item>
+          <el-descriptions-item label="上级审批意见">{{ userInfo.activist_approve_opinion || '未填写' }}</el-descriptions-item>
+        </el-descriptions>
+
+        <!-- 4. 联系人 -->
+        <el-descriptions title="四、 培养联系人" :column="2" border size="small" class="record-section">
+          <el-descriptions-item label="联系人(1)姓名">{{ userInfo.contact1_name || '未填写' }}</el-descriptions-item>
+          <el-descriptions-item label="联系电话">{{ userInfo.contact1_phone || '未填写' }}</el-descriptions-item>
+          <el-descriptions-item label="联系人(2)姓名">{{ userInfo.contact2_name || '未填写' }}</el-descriptions-item>
+          <el-descriptions-item label="联系电话">{{ userInfo.contact2_phone || '未填写' }}</el-descriptions-item>
+        </el-descriptions>
+
+        <!-- 5. 发展对象 -->
+        <el-descriptions title="五、 发展对象的确定和考察" :column="2" border size="small" class="record-section">
+          <el-descriptions-item label="征求群众意见座谈时间" :span="2">{{ userInfo.target_mass_meeting_time || '未填写' }}</el-descriptions-item>
+          <el-descriptions-item label="支委会/大会讨论时间" :span="2">{{ userInfo.confirm_target_meeting_time || '未填写' }}</el-descriptions-item>
+          <el-descriptions-item label="公示时间">{{ userInfo.target_public_time || '未填写' }}</el-descriptions-item>
+          <el-descriptions-item label="公示情况">{{ userInfo.target_public_desc || '未填写' }}</el-descriptions-item>
+          <el-descriptions-item label="审批时间">{{ userInfo.target_approve_time || '未填写' }}</el-descriptions-item>
+          <el-descriptions-item label="上级审批意见">{{ userInfo.target_approve_opinion || '未填写' }}</el-descriptions-item>
+          <el-descriptions-item label="培训时间">{{ userInfo.target_train_time || '未填写' }}</el-descriptions-item>
+          <el-descriptions-item label="政审情况">{{ userInfo.target_pol_check || '未填写' }}</el-descriptions-item>
+        </el-descriptions>
+
+        <!-- 6. 预备党员接收 -->
+        <el-descriptions title="六、 预备党员的接收" :column="2" border size="small" class="record-section">
+          <el-descriptions-item label="上级党委预审时间">{{ userInfo.probation_pre_check_time || '未填写' }}</el-descriptions-item>
+          <el-descriptions-item label="培训情况">{{ userInfo.probation_train_desc || '未填写' }}</el-descriptions-item>
+          <el-descriptions-item label="拟接收公示时间">{{ userInfo.probation_public_time || '未填写' }}</el-descriptions-item>
+          <el-descriptions-item label="公示情况">{{ userInfo.probation_public_desc || '未填写' }}</el-descriptions-item>
+          <el-descriptions-item label="大会讨论接收时间">{{ userInfo.probation_meeting_time || '未填写' }}</el-descriptions-item>
+          <el-descriptions-item label="表决情况">{{ userInfo.probation_vote_desc || '未填写' }}</el-descriptions-item>
+          <el-descriptions-item label="上级派人谈话时间">{{ userInfo.probation_talk_time || '未填写' }}</el-descriptions-item>
+          <el-descriptions-item label="谈话人">{{ userInfo.probation_talker || '未填写' }}</el-descriptions-item>
+          <el-descriptions-item label="审批时间">{{ userInfo.probation_approve_time || '未填写' }}</el-descriptions-item>
+          <el-descriptions-item label="上级审批意见">{{ userInfo.probation_approve_opinion || '未填写' }}</el-descriptions-item>
+        </el-descriptions>
+
+        <!-- 7. 介绍人 -->
+        <el-descriptions title="七、 入党介绍人" :column="2" border size="small" class="record-section">
+          <el-descriptions-item label="介绍人(1)姓名">{{ userInfo.intro1_name || '未填写' }}</el-descriptions-item>
+          <el-descriptions-item label="职务">{{ userInfo.intro1_post || '未填写' }}</el-descriptions-item>
+          <el-descriptions-item label="联系电话" :span="2">{{ userInfo.intro1_phone || '未填写' }}</el-descriptions-item>
+          <el-descriptions-item label="介绍人(2)姓名">{{ userInfo.intro2_name || '未填写' }}</el-descriptions-item>
+          <el-descriptions-item label="职务">{{ userInfo.intro2_post || '未填写' }}</el-descriptions-item>
+          <el-descriptions-item label="联系电话" :span="2">{{ userInfo.intro2_phone || '未填写' }}</el-descriptions-item>
+        </el-descriptions>
+
+        <!-- 8. 转正 -->
+        <el-descriptions title="八、 预备党员的教育考察和转正" :column="2" border size="small" class="record-section" style="margin-bottom: 30px;">
+          <el-descriptions-item label="转正申请时间">{{ userInfo.regular_apply_time || '未填写' }}</el-descriptions-item>
+          <el-descriptions-item label="征求群众意见座谈时间">{{ userInfo.regular_mass_meeting_time || '未填写' }}</el-descriptions-item>
+          <el-descriptions-item label="转正公示时间">{{ userInfo.regular_public_time || '未填写' }}</el-descriptions-item>
+          <el-descriptions-item label="公示情况">{{ userInfo.regular_public_desc || '未填写' }}</el-descriptions-item>
+          <el-descriptions-item label="支部大会讨论时间">{{ userInfo.regular_meeting_time || '未填写' }}</el-descriptions-item>
+          <el-descriptions-item label="表决情况">{{ userInfo.regular_vote_desc || '未填写' }}</el-descriptions-item>
+          <el-descriptions-item label="审批时间">{{ userInfo.regular_approve_time || '未填写' }}</el-descriptions-item>
+          <el-descriptions-item label="上级党委审批意见">{{ userInfo.regular_approve_opinion || '未填写' }}</el-descriptions-item>
+        </el-descriptions>
+      </div>
+    </el-drawer>
   </div>
 </template>
 
@@ -174,8 +276,13 @@ import { getCurrentUserInfo, getPointsLogs } from "../../api/system";
 import { getMyStudyRecords, getCourseList } from "../../api/learning";
 import { getMyPracticeRegistrations } from "../../api/practice";
 import { ElMessage } from "element-plus";
+// 👇 新增：引入文档图标
+import { Document } from '@element-plus/icons-vue'; 
 
 const router = useRouter()
+
+// 👇 新增：控制档案抽屉是否显示的变量
+const recordVisible = ref(false);
 
 // 状态控制
 const activeTab = ref("tasks");
@@ -205,7 +312,6 @@ const roleMap: any = {
 
 // 统一的学习跳转逻辑
 const goToStudy = (courseId: number) => {
-  // 👇 核心修复：加上 /branch 路由前缀
   router.push(`/branch/learning/video/${courseId}`)
 }
 
@@ -231,7 +337,7 @@ const fetchRequiredTasks = async () => {
       is_required: true, 
       is_completed: false,
       page: 1,
-      page_size: 50 // 👈 修改：改为 page_size
+      page_size: 50
     });
     requiredTasksUnfinished.value = resUnfinished.results || resUnfinished || [];
     taskTotal.value = requiredTasksUnfinished.value.length; 
@@ -241,7 +347,7 @@ const fetchRequiredTasks = async () => {
       is_required: true, 
       is_completed: true,
       page: 1,
-      page_size: 50 // 👈 修改：改为 page_size
+      page_size: 50
     });
     requiredTasksFinished.value = resFinished.results || resFinished || [];
   } finally {
@@ -368,4 +474,27 @@ onMounted(() => {
 :deep(.el-tabs__item) { font-size: 15px; height: 50px; }
 :deep(.el-tabs__item.is-active) { color: #ce1126; font-weight: bold; }
 :deep(.el-tabs__active-bar) { background-color: #ce1126; }
+
+/* 👇 新增：纪实档案抽屉相关样式 */
+.drawer-content {
+  padding: 0 15px;
+  height: 100%;
+  overflow-y: auto;
+}
+.record-section {
+  margin-bottom: 25px;
+}
+:deep(.el-descriptions__title) {
+  font-size: 16px;
+  color: #ce1126;
+  border-left: 4px solid #ce1126;
+  padding-left: 8px;
+  margin-bottom: 10px;
+}
+:deep(.el-descriptions__label) {
+  width: 140px;
+  color: #606266;
+  background-color: #fafafa !important;
+  font-weight: bold;
+}
 </style>
