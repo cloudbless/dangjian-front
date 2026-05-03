@@ -19,7 +19,7 @@
             </el-row>
           </el-form>
         </el-tab-pane>
-
+        
         <el-tab-pane label="二、申请入党">
           <el-form :model="form" label-width="150px" class="record-form">
             <el-row :gutter="40">

@@ -115,10 +115,11 @@
           </div>
         </el-tab-pane>
 
-        <el-tab-pane label="📸 支部实践成果" name="showcase">
-          <div v-loading="loadingShow" class="showcase-grid">
+        <!-- 支部实践成果 标签页 -->
+        <el-tab-pane label="📑 支部实践成果" name="results">
+          <div v-loading="loadingResults" class="showcase-grid">
             <el-row :gutter="20">
-              <el-col :span="6" v-for="item in showcases" :key="item.id">
+              <el-col :span="6" v-for="item in resultsList" :key="item.id">
                 <el-card
                   :body-style="{ padding: '0px' }"
                   shadow="hover"
@@ -133,21 +134,21 @@
                   <div class="showcase-content">
                     <h4 class="showcase-title">{{ item.title }}</h4>
                     <p class="showcase-summary">
-                      {{ item.summary || "展现先锋模范作用，践行初心使命。" }}
+                      {{ item.summary || "暂无简介" }}
                     </p>
                     <div class="showcase-meta">
                       <span>{{
                         new Date(item.created_at).toLocaleDateString()
                       }}</span>
-                      <span>发布: {{ item.author_name || "管理员" }}</span>
+                      <span>发布：{{ item.author_name || "未知" }}</span>
                     </div>
                   </div>
                 </el-card>
               </el-col>
             </el-row>
             <el-empty
-              v-if="showcases.length === 0"
-              description="暂无实践成果展示"
+              v-if="resultsList.length === 0"
+              description="暂无支部实践成果"
             />
           </div>
         </el-tab-pane>
@@ -167,19 +168,21 @@ import {
   cancelSignUpActivity,
   getPracticeList,
 } from "../../api/practice";
+
 const router = useRouter();
 const defaultCover =
   "https://images.unsplash.com/photo-1593113563332-6a84eb8eabdb?auto=format&fit=crop&q=80&w=400&h=250";
 
 const activeTab = ref("activities");
 
-// 数据状态
+// 活动数据状态
 const loadingAct = ref(false);
 const activities = ref<any[]>([]);
 const submitLoading = ref<number | null>(null);
 
-const loadingShow = ref(false);
-const showcases = ref<any[]>([]);
+// 支部实践成果的数据状态
+const loadingResults = ref(false);
+const resultsList = ref<any[]>([]);
 
 // 1. 获取本支部发布的实践活动 (带上 scope: 'branch')
 const fetchActivities = async () => {
@@ -199,14 +202,13 @@ const fetchActivities = async () => {
 };
 
 // 2. 报名活动逻辑
-// 1. 报名活动逻辑
 const handleSignUp = async (activity: any) => {
   submitLoading.value = activity.id;
   try {
     await signUpActivity({ activity: activity.id });
     ElMessage.success("🎉 报名成功！请按时前往指定地点参加活动。");
 
-    // 👇 核心修复：报名成功后，不但要标记为已报名，还要把状态强制设为 0 (待审核)
+    // 报名成功后，标记为已报名，并把状态强制设为 0 (待审核)
     activity.is_registered = true;
     activity.registration_status = 0;
   } catch (error: any) {
@@ -220,7 +222,7 @@ const handleSignUp = async (activity: any) => {
   }
 };
 
-// 2. 取消报名逻辑
+// 3. 取消报名逻辑
 const handleCancelSignUp = async (activity: any) => {
   ElMessageBox.confirm(`确定要取消报名【${activity.title}】吗？`, "取消确认", {
     confirmButtonText: "确定取消",
@@ -233,7 +235,7 @@ const handleCancelSignUp = async (activity: any) => {
         await cancelSignUpActivity(activity.id);
         ElMessage.success("已成功取消报名！");
 
-        // 👇 核心修复：取消成功后，把状态恢复成未报名时的初始值
+        // 取消成功后，把状态恢复成未报名时的初始值
         activity.is_registered = false;
         activity.registration_status = -1;
       } catch (error: any) {
@@ -245,32 +247,33 @@ const handleCancelSignUp = async (activity: any) => {
     })
     .catch(() => {});
 };
-// 3. 获取本支部的实践成果展示 (类型 6，且带上 scope: 'branch')
-const fetchShowcases = async () => {
-  loadingShow.value = true;
+
+// 4. 获取本支部的实践成果 (类型 7，且带上 scope: 'branch')
+const fetchResults = async () => {
+  loadingResults.value = true;
   try {
     const res: any = await getArticleList({
-      article_type: 6,
-      scope: "branch",
+      article_type: 7, // 请求类型 7: 支部实践成果
+      scope: "branch", // 仅展示当前支部的内容
       page: 1,
       size: 20,
     });
-    showcases.value = res.results || res || [];
+    resultsList.value = res.results || res || [];
   } catch (error) {
-    console.error("获取成果展示失败", error);
+    console.error("获取支部实践成果失败", error);
   } finally {
-    loadingShow.value = false;
+    loadingResults.value = false;
   }
 };
 
-// 4. 跳转到文章详情页阅读图文
+// 5. 跳转到文章详情页阅读图文
 const goToShowcase = (id: number) => {
   router.push(`/portal/article/${id}`);
 };
 
 onMounted(() => {
   fetchActivities();
-  fetchShowcases();
+  fetchResults(); // 初始化加载支部实践成果
 });
 </script>
 

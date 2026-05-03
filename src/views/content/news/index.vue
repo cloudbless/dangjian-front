@@ -24,6 +24,7 @@
               <el-option label="支部动态" :value="4" />
               <el-option label="学习园地" :value="5" />
               <el-option label="实践中心" :value="6" />
+              <el-option label="支部实践成果" :value="7" />
             </el-select>
           </el-form-item>
           <el-form-item>
@@ -70,6 +71,9 @@
               color="#626aef"
               style="color: white"
               >实践中心</el-tag
+            >
+            <el-tag v-else-if="row.article_type === 7" type="success"
+              >支部实践成果</el-tag
             >
             <el-tag v-else>未知类型</el-tag>
           </template>
@@ -151,6 +155,7 @@
             <el-option label="支部动态" :value="4" />
             <el-option label="学习园地" :value="5" />
             <el-option label="实践中心" :value="6" />
+            <el-option label="支部实践成果" :value="7" />
           </el-select>
         </el-form-item>
 

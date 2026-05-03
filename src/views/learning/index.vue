@@ -60,7 +60,7 @@ const fetchCourses = async () => {
   loading.value = true
   try {
     // 1. 获取所有课程列表
-    const res: any = await getCourseList()
+    const res: any = await getCourseList({ scope: 'branch' })
     const courseData = res.results || res || []
 
     // 2. 如果用户已登录，获取学习记录
